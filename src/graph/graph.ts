@@ -57,6 +57,8 @@ class Edge extends Graphics {
   endNode: Node;
   color: number;
   thickness: number;
+  tipLength: number;
+  tipWidth: number;
   text: Text;
 
   constructor(
@@ -72,6 +74,8 @@ class Edge extends Graphics {
     this.endNode = endNode;
     this.color = color;
     this.thickness = thickness;
+    this.tipLength = thickness * 6;
+    this.tipWidth = thickness * 6;
     this.text = new Text({
       text: text,
       style: { fontSize: 12, fill: this.color },
@@ -91,14 +95,14 @@ class Edge extends Graphics {
       start,
       ux,
       uy,
-      this.startNode.radius + this.startNode.margin
+      this.startNode.radius + this.startNode.margin + this.tipLength
     );
 
     const { x: x2, y: y2 } = getOffsetPoint(
       end,
       ux,
       uy,
-      -(this.endNode.radius + this.endNode.margin)
+      -(this.endNode.radius + this.endNode.margin + this.tipLength)
     );
 
     const { x: cx, y: cy } = getMidPoint({ x: x1, y: y1 }, { x: x2, y: y2 });
@@ -128,9 +132,6 @@ class Edge extends Graphics {
     const start = this.startNode.getCenter();
     const end = this.endNode.getCenter();
 
-    const arrowLength = this.thickness * 6;
-    const arrowWidth = this.thickness * 6;
-
     const dx = end.x - start.x;
     const dy = end.y - start.y;
     const angle = Math.atan2(dy, dx);
@@ -140,13 +141,21 @@ class Edge extends Graphics {
     const { x: tipX, y: tipY } = getOffsetPoint(end, ux, uy, -offset);
 
     const leftX =
-      tipX - arrowLength * Math.cos(angle) + (arrowWidth * Math.sin(angle)) / 2;
+      tipX -
+      this.tipLength * Math.cos(angle) +
+      (this.tipWidth * Math.sin(angle)) / 2;
     const leftY =
-      tipY - arrowLength * Math.sin(angle) - (arrowWidth * Math.cos(angle)) / 2;
+      tipY -
+      this.tipLength * Math.sin(angle) -
+      (this.tipWidth * Math.cos(angle)) / 2;
     const rightX =
-      tipX - arrowLength * Math.cos(angle) - (arrowWidth * Math.sin(angle)) / 2;
+      tipX -
+      this.tipLength * Math.cos(angle) -
+      (this.tipWidth * Math.sin(angle)) / 2;
     const rightY =
-      tipY - arrowLength * Math.sin(angle) + (arrowWidth * Math.cos(angle)) / 2;
+      tipY -
+      this.tipLength * Math.sin(angle) +
+      (this.tipWidth * Math.cos(angle)) / 2;
 
     this.moveTo(tipX, tipY)
       .lineTo(leftX, leftY)
