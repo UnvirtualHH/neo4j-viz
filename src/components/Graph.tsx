@@ -1,3 +1,4 @@
+import { Viewport } from "pixi-viewport";
 import {
   Application,
   Container,
@@ -31,9 +32,26 @@ const Graph: Component = () => {
 
     pixiApp.stage.hitArea = pixiApp.screen;
     pixiApp.stage.eventMode = "static";
-    pixiApp.stage.interactive = true;
 
-    // TODO JH: Refactor event handling
+    const viewport = new Viewport({ events: pixiApp.renderer.events });
+
+    viewport.drag().pinch().wheel().clampZoom({
+      minWidth: 100,
+      minHeight: 100,
+      maxWidth: 10000,
+      maxHeight: 10000,
+    });
+
+    viewport.on("mousedown", () => {
+      viewport.cursor = "grabbing";
+    });
+
+    viewport.on("mouseup", () => {
+      viewport.cursor = "auto";
+    });
+
+    pixiApp.stage.addChild(viewport);
+
     const onDragMove = (event: FederatedPointerEvent) => {
       if (!dragTarget) return;
 
@@ -55,6 +73,8 @@ const Graph: Component = () => {
       dragOffset.x = localPos.x;
       dragOffset.y = localPos.y;
 
+      viewport.pause = true;
+
       pixiApp.stage.on("pointermove", onDragMove);
     };
 
@@ -63,6 +83,9 @@ const Graph: Component = () => {
 
       dragTarget.alpha = 1;
       dragTarget.cursor = "pointer";
+
+      viewport.pause = false;
+
       pixiApp.stage.off("pointermove", onDragMove);
     };
 
@@ -70,30 +93,33 @@ const Graph: Component = () => {
     pixiApp.stage.on("pointerup", onDragEnd);
 
     const graph = new NetworkGraph();
-    graph.addNode(
-      0,
-      new Node({
-        x: 250,
-        y: 50,
-        radius: 20,
-        color: 0x6a93b0,
-        onDragStart: onDragStart,
-      })
-    );
-    graph.addNode(
-      1,
-      new Node({
-        x: 200,
-        y: 200,
-        radius: 20,
-        color: 0xedab56,
-        onDragStart: onDragStart,
-      })
-    );
 
-    graph.addEdge(0, 1, 0xeeeeee, 1.5, "Edge 0-1");
+    for (let i = 0; i < 10; i++) {
+      graph.addNode(
+        i,
+        new Node({
+          position: {
+            x: Math.random() * pixiApp.screen.width,
+            y: Math.random() * pixiApp.screen.height,
+          },
+          radius: 20,
+          color: 0xedab56,
+          onDragStart: onDragStart,
+        })
+      );
+    }
 
-    pixiApp.stage.addChild(graph);
+    for (let i = 0; i < 10; i++) {
+      graph.addEdge(
+        Math.floor(Math.random() * 10),
+        Math.floor(Math.random() * 10),
+        0xdddddd,
+        2,
+        `Edge ${i}`
+      );
+    }
+
+    viewport.addChild(graph);
 
     window.addEventListener("resize", resizeHandler);
   });

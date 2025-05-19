@@ -5,27 +5,28 @@ import {
   PointData,
   Text,
 } from "pixi.js";
-
-// TODO JH: Clean up
+import { darkenColor } from "../utils/color";
+import { getMidPoint, getOffsetPoint, getUnitVector } from "../utils/vector";
 
 type NodeId = string | number;
 type NodeProperties = {
-  x: number;
-  y: number;
+  position: PointData;
   radius: number;
   color: number;
-  props?: [key: string];
   onDragStart?: (event: FederatedPointerEvent) => void;
 };
 
 class Node extends Graphics {
-  props?: [key: string];
+  radius: number;
+  color: number;
+  margin: number;
 
   constructor(properties: NodeProperties) {
     super();
-    this.x = properties.x;
-    this.y = properties.y;
-    this.props = properties.props;
+    this.position = properties.position;
+    this.radius = properties.radius;
+    this.color = properties.color;
+    this.margin = 5;
 
     this.eventMode = "static";
     this.cursor = "pointer";
@@ -38,10 +39,10 @@ class Node extends Graphics {
       this
     );
 
-    this.circle(0, 0, properties.radius)
-      .fill(properties.color)
+    this.circle(0, 0, this.radius)
+      .fill(this.color)
       .stroke({
-        color: darkenColor(properties.color, 50),
+        color: darkenColor(this.color, 50),
         width: 2,
       });
   }
@@ -73,7 +74,8 @@ class Edge extends Graphics {
     this.thickness = thickness;
     this.text = new Text({
       text: text,
-      style: { fontSize: 12, fill: 0x000000 },
+      style: { fontSize: 12, fill: this.color },
+      resolution: 5,
     });
 
     this.drawEdge();
@@ -83,9 +85,23 @@ class Edge extends Graphics {
     const start = this.startNode.getCenter();
     const end = this.endNode.getCenter();
 
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const { ux, uy } = getUnitVector(start, end);
+
+    const { x: x1, y: y1 } = getOffsetPoint(
+      start,
+      ux,
+      uy,
+      this.startNode.radius + this.startNode.margin
+    );
+
+    const { x: x2, y: y2 } = getOffsetPoint(
+      end,
+      ux,
+      uy,
+      -(this.endNode.radius + this.endNode.margin)
+    );
+
+    const { x: cx, y: cy } = getMidPoint({ x: x1, y: y1 }, { x: x2, y: y2 });
 
     let clipLength = 0;
     if (this.text && this.text.text) {
@@ -93,17 +109,6 @@ class Edge extends Graphics {
       const textLength = this.text.width + padding * 2;
       clipLength = textLength / 2;
     }
-
-    const ux = dx / distance;
-    const uy = dy / distance;
-
-    const x1 = start.x;
-    const y1 = start.y;
-    const x2 = end.x;
-    const y2 = end.y;
-
-    const cx = (x1 + x2) / 2;
-    const cy = (y1 + y2) / 2;
 
     const clipStartX = cx - ux * clipLength;
     const clipStartY = cy - uy * clipLength;
@@ -123,15 +128,17 @@ class Edge extends Graphics {
     const start = this.startNode.getCenter();
     const end = this.endNode.getCenter();
 
-    const arrowLength = this.thickness * 5;
-    const arrowWidth = this.thickness * 5;
+    const arrowLength = this.thickness * 6;
+    const arrowWidth = this.thickness * 6;
 
     const dx = end.x - start.x;
     const dy = end.y - start.y;
     const angle = Math.atan2(dy, dx);
 
-    const tipX = end.x;
-    const tipY = end.y;
+    const { ux, uy } = getUnitVector(start, end);
+    const offset = this.endNode.radius + this.endNode.margin;
+    const { x: tipX, y: tipY } = getOffsetPoint(end, ux, uy, -offset);
+
     const leftX =
       tipX - arrowLength * Math.cos(angle) + (arrowWidth * Math.sin(angle)) / 2;
     const leftY =
@@ -152,8 +159,7 @@ class Edge extends Graphics {
     const start = this.startNode.getCenter();
     const end = this.endNode.getCenter();
 
-    const midX = (start.x + end.x) / 2;
-    const midY = (start.y + end.y) / 2;
+    const { x: midX, y: midY } = getMidPoint(start, end);
 
     const dx = end.x - start.x;
     const dy = end.y - start.y;
@@ -168,8 +174,6 @@ class Edge extends Graphics {
     } else {
       this.text.rotation = angle;
     }
-
-    this.text.style.fill = this.color;
 
     if (!this.text.parent) {
       this.addChild(this.text);
@@ -218,22 +222,11 @@ class NetworkGraph extends Container {
     const edge = new Edge(startNode, endNode, color, width, text);
     this.edges.push(edge);
     this.addChild(edge);
-    console.log(this.children);
   }
 
-  // TODO JH: Add method to update edge positions by nodes
   updateEdges() {
-    this.edges.forEach((edge) => edge.updatePosition());
+    this.edges.forEach((edge) => edge.drawEdge());
   }
 }
 
 export { Edge, NetworkGraph, Node };
-
-function darkenColor(color: number, amount: number): number {
-  const r = ((color >> 16) & 0xff) - amount;
-  const g = ((color >> 8) & 0xff) - amount;
-  const b = (color & 0xff) - amount;
-  return (
-    ((Math.max(r, 0) << 16) | (Math.max(g, 0) << 8) | Math.max(b, 0)) >>> 0
-  );
-}

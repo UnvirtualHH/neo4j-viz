@@ -14,6 +14,9 @@ importers:
       neo4j-driver:
         specifier: ^5.28.1
         version: 5.28.1
+      pixi-viewport:
+        specifier: ^6.0.3
+        version: 6.0.3(pixi.js@8.9.2)
       pixi.js:
         specifier: ^8.9.2
         version: 8.9.2
@@ -763,6 +766,11 @@ packages:
     resolution: {integrity: sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==}
     engines: {node: '>=12'}
 
+  pixi-viewport@6.0.3:
+    resolution: {integrity: sha512-2+qPJ0/n+8hQYhWvY+795+x9y3MiUrCOWacK0DY53whowWaGdx9iDocy7z1pBwjkZhC52YvrJQuZKK0sdVLtBw==}
+    peerDependencies:
+      pixi.js: '>=8'
+
   pixi.js@8.9.2:
     resolution: {integrity: sha512-oLFBkOOA/O6OpT5T8o05AxgZB9x9yWNzEQ+WTNZZFoCvfU2GdT4sFTjpVFuHQzgZPmAm/1IFhKdNiXVnlL8PRw==}
 
@@ -1498,6 +1506,10 @@ snapshots:
   picocolors@1.1.1: {}
 
   picomatch@4.0.2: {}
+
+  pixi-viewport@6.0.3(pixi.js@8.9.2):
+    dependencies:
+      pixi.js: 8.9.2
 
   pixi.js@8.9.2:
     dependencies:
