@@ -1,8 +1,7 @@
-
-import type { Component } from "solid-js";
+import { type Component } from "solid-js";
+import Graph from "./components/Graph";
 
 import CypherEditor from "./CypherEditor";
-import Graph from "./components/Graph";
 
 const App: Component = () => {
   return (
