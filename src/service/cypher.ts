@@ -1,10 +1,10 @@
+import { driverInstance } from "../state/connection";
 import {
   CypherQueryResult,
   GraphRow,
   Neo4jNode,
   Neo4jRelationship,
 } from "../types/graphdata";
-import { driverInstance } from "../state/connection";
 
 export async function runCypherQuery(
   query: string
@@ -35,19 +35,21 @@ export async function runCypherQuery(
     }
 
     const data: GraphRow[] = result.records.map((record) => {
-      const [a, r, b] = record._fields;
+      const [sourceNode, relation, targetNode] = record._fields;
 
-      if (a?.elementId) nodeSet.add(a.elementId);
-      if (b?.elementId) nodeSet.add(b.elementId);
-      if (r?.type && a?.elementId && b?.elementId) {
-        relSet.add(`${a.elementId}->${r.type}->${b.elementId}`);
+      if (sourceNode?.elementId) nodeSet.add(sourceNode.elementId);
+      if (targetNode?.elementId) nodeSet.add(targetNode.elementId);
+      if (relation?.type && sourceNode?.elementId && targetNode?.elementId) {
+        relSet.add(
+          `${sourceNode.elementId}->${relation.type}->${targetNode.elementId}`
+        );
       }
 
-      countLabels(a);
-      countLabels(b);
-      countRelType(r);
+      countLabels(sourceNode);
+      countRelType(relation);
+      countLabels(targetNode);
 
-      return { a, r, b };
+      return { sourceNode, relation, targetNode };
     });
 
     const nodeCount = nodeSet.size;
