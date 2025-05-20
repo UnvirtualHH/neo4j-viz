@@ -8,8 +8,13 @@ import {
 import { darkenColor } from "../utils/color";
 import { getMidPoint, getOffsetPoint, getUnitVector } from "../utils/vector";
 
+type Data = {
+  [key: string]: any;
+};
+
 type NodeId = string | number;
 type NodeProperties = {
+  id: NodeId;
   position: PointData;
   radius: number;
   color: number;
@@ -17,7 +22,17 @@ type NodeProperties = {
   onDragStart?: (event: FederatedPointerEvent) => void;
 };
 
+type EdgeProperties<T extends Data> = {
+  startNode: Node;
+  endNode: Node;
+  color: number;
+  thickness: number;
+  caption: keyof T;
+  data: T;
+};
+
 class Node extends Graphics {
+  id: NodeId;
   radius: number;
   color: number;
   margin: number;
@@ -25,6 +40,7 @@ class Node extends Graphics {
 
   constructor(properties: NodeProperties) {
     super();
+    this.id = properties.id;
     this.position = properties.position;
     this.radius = properties.radius;
     this.color = properties.color;
@@ -71,32 +87,30 @@ class Node extends Graphics {
   }
 }
 
-class Edge extends Graphics {
+class Edge<T extends Data = Data> extends Graphics {
   startNode: Node;
   endNode: Node;
   color: number;
   thickness: number;
   tipLength: number;
   tipWidth: number;
+  caption: keyof T;
+  data: T;
   text: Text;
 
-  constructor(
-    startNode: Node,
-    endNode: Node,
-    color: number,
-    thickness: number,
-    text: string
-  ) {
+  constructor(properties: EdgeProperties<T>) {
     super();
 
-    this.startNode = startNode;
-    this.endNode = endNode;
-    this.color = color;
-    this.thickness = thickness;
-    this.tipLength = thickness * 6;
-    this.tipWidth = thickness * 6;
+    this.startNode = properties.startNode;
+    this.endNode = properties.endNode;
+    this.color = properties.color;
+    this.thickness = properties.thickness;
+    this.tipLength = properties.thickness * 6;
+    this.tipWidth = properties.thickness * 6;
+    this.caption = properties.caption;
+    this.data = properties.data;
     this.text = new Text({
-      text: text,
+      text: this.data[this.caption],
       style: { fontSize: 12, fill: this.color },
       resolution: 5,
     });
@@ -216,44 +230,57 @@ class Edge extends Graphics {
   }
 
   updatePosition() {
-    this.clear();
     this.drawEdge();
   }
 }
 
 class NetworkGraph extends Container {
   nodes: Map<NodeId, Node> = new Map();
-  edges: Edge[] = [];
+  edges: Edge<Data>[] = [];
 
   constructor() {
     super();
   }
 
-  addNode(id: NodeId, node: Node) {
-    this.nodes.set(id, node);
+  addNode(properties: NodeProperties) {
+    const node = new Node(properties);
+    this.nodes.set(properties.id, node);
     this.addChild(node);
   }
 
-  addEdge(
-    startId: NodeId,
-    endId: NodeId,
-    color: number,
-    width: number,
-    text: string
+  addEdge<T extends Data>(
+    properties: Omit<EdgeProperties<T>, "startNode" | "endNode"> & {
+      startId: NodeId;
+      endId: NodeId;
+    }
   ) {
-    const startNode = this.nodes.get(startId);
-    const endNode = this.nodes.get(endId);
+    const startNode = this.nodes.get(properties.startId);
+    const endNode = this.nodes.get(properties.endId);
     if (!startNode || !endNode) {
       throw new Error("Invalid node IDs for edge");
     }
 
-    const edge = new Edge(startNode, endNode, color, width, text);
-    this.edges.push(edge);
+    const edge = new Edge<T>({
+      ...properties,
+      startNode,
+      endNode,
+    });
+    this.edges.push(edge as unknown as Edge<Data>);
     this.addChild(edge);
   }
 
   updateEdges() {
     this.edges.forEach((edge) => edge.drawEdge());
+  }
+
+  updateEdgePositions(id: NodeId) {
+    const edges = this.edges.filter(
+      (edge) => edge.startNode.id === id || edge.endNode.id === id
+    );
+
+    edges.forEach((edge) => {
+      edge.updatePosition();
+    });
   }
 }
 

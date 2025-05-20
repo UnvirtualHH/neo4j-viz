@@ -1,4 +1,3 @@
-import { Component, createEffect, onCleanup, onMount } from "solid-js";
 import { Viewport } from "pixi-viewport";
 import {
   Application,
@@ -6,9 +5,10 @@ import {
   FederatedPointerEvent,
   PointData,
 } from "pixi.js";
+import { Component, createEffect, onCleanup, onMount } from "solid-js";
 import { NetworkGraph, Node } from "../graph/graph";
-import debounce from "../utils/debounce";
 import { GraphRow } from "../types/graphdata";
+import debounce from "../utils/debounce";
 
 type GraphProps = {
   data: GraphRow[];
@@ -53,18 +53,27 @@ const Graph: Component<GraphProps> = (props) => {
 
   const onDragMove = (event: FederatedPointerEvent) => {
     if (!dragTarget) return;
+
     const newPos = event.getLocalPosition(dragTarget.parent);
     dragTarget.position.set(newPos.x - dragOffset.x, newPos.y - dragOffset.y);
-    graph?.updateEdges();
+
+    graph.updateEdges();
   };
 
   const onDragStart = (event: FederatedPointerEvent) => {
-    dragTarget = event.currentTarget;
-    dragTarget.alpha = 0.5;
-    dragTarget.cursor = "grabbing";
-    const localPos = event.getLocalPosition(dragTarget);
-    dragOffset = { x: localPos.x, y: localPos.y };
-    pixiApp.stage.off("pointermove", onDragMove);
+    const node = event.currentTarget;
+
+    dragTarget = node;
+
+    node.alpha = 0.5;
+    node.cursor = "grabbing";
+
+    const localPos = event.getLocalPosition(node);
+    dragOffset.x = localPos.x;
+    dragOffset.y = localPos.y;
+
+    viewport.pause = true;
+
     pixiApp.stage.on("pointermove", onDragMove);
   };
 
@@ -94,6 +103,7 @@ const Graph: Component<GraphProps> = (props) => {
 
       if (!nodeMap.has(sourceId)) {
         const node = new Node({
+          id: sourceId,
           position: {
             x: Math.random() * pixiApp.screen.width,
             y: Math.random() * pixiApp.screen.height,
@@ -104,7 +114,7 @@ const Graph: Component<GraphProps> = (props) => {
           onDragStart,
         });
 
-        graph.addNode(sourceId, node);
+        graph.addNode(node);
         nodeMap.set(sourceId, node);
       }
 
@@ -113,6 +123,7 @@ const Graph: Component<GraphProps> = (props) => {
 
         if (!nodeMap.has(targetId)) {
           const node = new Node({
+            id: targetId,
             position: {
               x: Math.random() * pixiApp.screen.width,
               y: Math.random() * pixiApp.screen.height,
@@ -123,11 +134,18 @@ const Graph: Component<GraphProps> = (props) => {
             onDragStart,
           });
 
-          graph.addNode(targetId, node);
+          graph.addNode(node);
           nodeMap.set(targetId, node);
         }
 
-        graph.addEdge(sourceId, targetId, 0xdddddd, 2, r.type ?? "EDGE");
+        graph.addEdge({
+          startId: sourceId,
+          endId: targetId,
+          color: 0xdddddd,
+          thickness: 2,
+          caption: "type",
+          data: r,
+        });
       }
     }
 
