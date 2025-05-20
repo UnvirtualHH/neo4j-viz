@@ -12,6 +12,8 @@ import { getFullSchema, runCypherQuery } from "../../service/cypher";
 import { DbSchema } from "@neo4j-cypher/language-support";
 import { isConnected } from "../../state/connection";
 import { Circle, Timer, Workflow } from "lucide-solid";
+import FloatingDialog from "../dialog/FloatingDialog";
+import { autoDockPosition } from "../dialog/autoDockPosition";
 
 type CypherEditorProps = {
   onQueryResult: (data: any[]) => void;
@@ -160,26 +162,6 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     }
   };
 
-  const onDragStartEditor = (e: MouseEvent) => {
-    dragging = true;
-    dragOffset = {
-      x: e.clientX - position().x,
-      y: e.clientY - position().y,
-    };
-  };
-
-  const onDragMove = (e: MouseEvent) => {
-    if (!dragging) return;
-    setPosition({
-      x: e.clientX - dragOffset.x,
-      y: e.clientY - dragOffset.y,
-    });
-  };
-
-  const onDragEnd = () => {
-    dragging = false;
-  };
-
   createEffect(async () => {
     if (isConnected()) {
       try {
@@ -203,134 +185,113 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
       y: 20,
     });
     document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("mousemove", onDragMove);
-    document.addEventListener("mouseup", onDragEnd);
   });
 
   onCleanup(() => {
     document.removeEventListener("mousedown", handleClickOutside);
-    document.removeEventListener("mousemove", onDragMove);
-    document.removeEventListener("mouseup", onDragEnd);
   });
 
   return (
-    <div
-      class="floating-editor"
-      style={{
-        top: `${position().y}px`,
-        left: `${position().x}px`,
-      }}
+    <FloatingDialog
+      title="Cypher Editor"
+      initialPosition={autoDockPosition("top-right", { width: 600 })}
+      initialSize={{ width: 600, height: 380 }}
+      closable={false}
+      minimizable={true}
+      draggable={true}
+      resizable={true}
+      onClose={() => setMinimized(true)}
     >
-      <div class="floating-editor-header" onMouseDown={onDragStartEditor}>
-        <span>Cypher Editor</span>
+      <div class="editor-container">
+        {autocomplete()?.suggestions()!.length! > 0 && (
+          <div class="autocomplete-box" ref={autocompleteRef}>
+            {autocomplete()
+              ?.suggestions()
+              .map((item, index) => (
+                <div
+                  class={`autocomplete-item ${
+                    index === autocomplete()?.selectedIndex() ? "selected" : ""
+                  }`}
+                  onMouseDown={() => insertAutocomplete(item.label)}
+                >
+                  <span class="suggestion-label">{item.label}</span>
+                  <span class="suggestion-type">{item.kind}</span>
+                </div>
+              ))}
+          </div>
+        )}
+
+        <div class="line-numbers" ref={lineNumberRef}></div>
+        <div class="highlight-layer" ref={highlightRef} aria-hidden="true" />
+        <textarea
+          class="editor-input"
+          ref={inputRef}
+          onInput={syncHighlight}
+          onKeyDown={handleKeyDown}
+          onScroll={syncScroll}
+          spellcheck={false}
+        />
+
         <button
-          class="floating-editor-minimize"
-          onClick={() => setMinimized(!minimized())}
+          class="btn execute-btn floating-btn"
+          onClick={executeQuery}
+          disabled={loading()}
         >
-          {minimized() ? "⬍" : "–"}
+          {loading() ? "Running..." : "Execute Query"}
         </button>
       </div>
 
-      {!minimized() && (
-        <div class="floating-editor-body">
-          <div class="editor-container">
-            {autocomplete()?.suggestions()!.length! > 0 && (
-              <div class="autocomplete-box" ref={autocompleteRef}>
-                {autocomplete()
-                  ?.suggestions()
-                  .map((item, index) => (
-                    <div
-                      class={`autocomplete-item ${
-                        index === autocomplete()?.selectedIndex()
-                          ? "selected"
-                          : ""
-                      }`}
-                      onMouseDown={() => insertAutocomplete(item.label)}
-                    >
-                      <span class="suggestion-label">{item.label}</span>
-                      <span class="suggestion-type">{item.kind}</span>
-                    </div>
-                  ))}
+      <div class="editor-info flex flex-col gap-1 mt-2">
+        {error() && <div class="error-message">{error()}</div>}
+
+        {queryTime() !== null && (
+          <div class="text-sm text-gray-500 flex items-center gap-3">
+            <div class="flex items-center gap-1">
+              <Timer size={16} strokeWidth={1.5} />
+              <span>{queryTime()!.toFixed(1)} ms</span>
+            </div>
+            {nodeCount() !== null && (
+              <div class="flex items-center gap-1">
+                <Circle size={16} strokeWidth={1.5} />
+                <span>{nodeCount()} Nodes</span>
               </div>
             )}
-
-            <div class="line-numbers" ref={lineNumberRef}></div>
-            <div
-              class="highlight-layer"
-              ref={highlightRef}
-              aria-hidden="true"
-            ></div>
-            <textarea
-              class="editor-input"
-              ref={inputRef}
-              onInput={syncHighlight}
-              onKeyDown={handleKeyDown}
-              onScroll={syncScroll}
-              spellcheck={false}
-            ></textarea>
-
-            <button
-              class="btn execute-btn floating-btn"
-              onClick={executeQuery}
-              disabled={loading()}
-            >
-              {loading() ? "Running..." : "Execute Query"}
-            </button>
-          </div>
-
-          <div class="editor-info flex flex-col gap-1">
-            {error() && <div class="error-message">{error()}</div>}
-
-            {queryTime() !== null && (
-              <div class="text-sm text-gray-500 flex items-center gap-3">
-                <div class="flex items-center gap-1">
-                  <Timer size={16} strokeWidth={1.5} />
-                  <span>{queryTime()!.toFixed(1)} ms</span>
-                </div>
-                {nodeCount() !== null && (
-                  <div class="flex items-center gap-1">
-                    <Circle size={16} strokeWidth={1.5} />
-                    <span>{nodeCount()} Nodes</span>
-                  </div>
-                )}
-                {relCount() !== null && (
-                  <div class="flex items-center gap-1">
-                    <Workflow size={16} strokeWidth={1.5} />
-                    <span>{relCount()} Relations</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {Object.keys(labelStats()).length > 0 && (
-              <div class="text-sm text-gray-600 flex flex-wrap gap-4">
-                {Object.entries(labelStats()).map(([label, count]) => (
-                  <div class="flex items-center gap-1" title="Knoten mit Label">
-                    <Circle size={14} strokeWidth={1.5} />
-                    <span>
-                      {label}: {count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {Object.keys(relTypeStats()).length > 0 && (
-              <div class="text-sm text-gray-600 flex flex-wrap gap-4">
-                {Object.entries(relTypeStats()).map(([type, count]) => (
-                  <div class="flex items-center gap-1" title="Beziehungen">
-                    <Workflow size={14} strokeWidth={1.5} />
-                    <span>
-                      {type}: {count}
-                    </span>
-                  </div>
-                ))}
+            {relCount() !== null && (
+              <div class="flex items-center gap-1">
+                <Workflow size={16} strokeWidth={1.5} />
+                <span>{relCount()} Relations</span>
               </div>
             )}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {Object.keys(labelStats()).length > 0 && (
+          <div class="text-sm text-gray-600 flex flex-wrap gap-4">
+            {Object.entries(labelStats()).map(([label, count]) => (
+              <div class="flex items-center gap-1" title="Knoten mit Label">
+                <Circle size={14} strokeWidth={1.5} />
+                <span>
+                  {label}: {count}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {Object.keys(relTypeStats()).length > 0 && (
+          <div class="text-sm text-gray-600 flex flex-wrap gap-4">
+            {Object.entries(relTypeStats()).map(([type, count]) => (
+              <div class="flex items-center gap-1" title="Beziehungen">
+                <Workflow size={14} strokeWidth={1.5} />
+                <span>
+                  {type}: {count}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </FloatingDialog>
   );
 };
 

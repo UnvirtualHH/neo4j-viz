@@ -9,6 +9,7 @@ type NodeProperties = {
   color: number;
   label: string;
   onDragStart?: (event: FederatedPointerEvent) => void;
+  onClick?: (event: FederatedPointerEvent) => void;
 };
 
 class Node extends Graphics {
@@ -17,6 +18,7 @@ class Node extends Graphics {
   color: number;
   margin: number;
   label: string;
+  onClick?: (event: FederatedPointerEvent) => void;
 
   constructor(properties: NodeProperties) {
     super();
@@ -30,13 +32,20 @@ class Node extends Graphics {
     this.eventMode = "static";
     this.cursor = "pointer";
 
-    this.on(
-      "pointerdown",
-      (event) => {
-        properties.onDragStart?.(event);
-      },
-      this
-    );
+    this.onClick = properties.onClick;
+
+    let pointerDownTime = 0;
+    let pointerDownPos: PointData = { x: 0, y: 0 };
+
+    this.on("pointerdown", (event) => {
+      pointerDownTime = performance.now();
+      pointerDownPos = event.global.clone();
+      setTimeout(() => properties.onDragStart?.(event), 0);
+    });
+
+    this.on("pointertap", (event) => {
+      properties.onClick?.(event);
+    });
 
     this.circle(0, 0, this.radius)
       .fill(this.color)

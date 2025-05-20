@@ -1,4 +1,4 @@
-import { Graphics, Text } from "pixi.js";
+import { FederatedPointerEvent, Graphics, Text } from "pixi.js";
 import { Data } from "../types/graphdata";
 import { getMidPoint, getOffsetPoint, getUnitVector } from "../utils/vector";
 import Node from "./node";
@@ -10,6 +10,7 @@ type EdgeProperties<T extends Data> = {
   thickness: number;
   caption: keyof T;
   data: T;
+  onClick?: (event: FederatedPointerEvent) => void;
 };
 
 class Edge<T extends Data = Data> extends Graphics {
@@ -22,6 +23,7 @@ class Edge<T extends Data = Data> extends Graphics {
   caption: keyof T;
   data: T;
   text: Text;
+  onClick?: (event: FederatedPointerEvent) => void;
 
   constructor(properties: EdgeProperties<T>) {
     super();
@@ -34,6 +36,7 @@ class Edge<T extends Data = Data> extends Graphics {
     this.tipWidth = properties.thickness * 6;
     this.caption = properties.caption;
     this.data = properties.data;
+    this.onClick = properties.onClick;
     this.text = new Text({
       text: this.data[this.caption],
       style: { fontSize: 12, fill: this.color },
@@ -41,6 +44,10 @@ class Edge<T extends Data = Data> extends Graphics {
     });
 
     this.drawEdge();
+
+    this.on("pointertap", (event) => {
+      properties.onClick?.(event);
+    });
   }
 
   drawLine() {

@@ -5,11 +5,18 @@ import {
   FederatedPointerEvent,
   PointData,
 } from "pixi.js";
-import { Component, createEffect, onCleanup, onMount } from "solid-js";
+import {
+  Component,
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 import NetworkGraph from "../graph/networkgraph";
 import Node from "../graph/node";
 import { GraphRow } from "../types/graphdata";
 import debounce from "../utils/debounce";
+import PropertiesDialog from "./graph/PropertiesDialog";
 
 type GraphProps = {
   data: GraphRow[];
@@ -25,6 +32,12 @@ const Graph: Component<GraphProps> = (props) => {
 
   let isViewportDragging = false;
   let lastPointerPosition: { x: number; y: number } | null = null;
+
+  const [inspectedProps, setInspectedProps] = createSignal<{
+    data: Record<string, any>;
+    title: string;
+    type: "node" | "relationship";
+  } | null>(null);
 
   const resizeHandler = debounce(() => {
     pixiApp.renderer.resize(canvasRef.clientWidth, canvasRef.clientHeight);
@@ -145,6 +158,13 @@ const Graph: Component<GraphProps> = (props) => {
           color: 0x3498db,
           label: a.properties.name ?? sourceId,
           onDragStart,
+          onClick: () => {
+            setInspectedProps({
+              data: a.properties,
+              title: a.labels?.join(", ") || "Node",
+              type: "node",
+            });
+          },
         });
 
         graph.addNode(node);
@@ -165,6 +185,13 @@ const Graph: Component<GraphProps> = (props) => {
             color: 0xe67e22,
             label: b.properties.name ?? targetId,
             onDragStart,
+            onClick: () => {
+              setInspectedProps({
+                data: a.properties,
+                title: a.labels?.join(", ") || "Node",
+                type: "node",
+              });
+            },
           });
 
           graph.addNode(node);
@@ -178,6 +205,13 @@ const Graph: Component<GraphProps> = (props) => {
           thickness: 2,
           caption: "type",
           data: r,
+          onClick: () => {
+            setInspectedProps({
+              data: a.properties,
+              title: a.labels?.join(", ") || "Relationship",
+              type: "relationship",
+            });
+          },
         });
       }
     }
@@ -201,7 +235,19 @@ const Graph: Component<GraphProps> = (props) => {
     window.removeEventListener("pointercancel", onDragEnd);
   });
 
-  return <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />;
+  return (
+    <>
+      <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />
+      {inspectedProps() && (
+        <PropertiesDialog
+          data={inspectedProps()!.data}
+          title={inspectedProps()!.title}
+          type={inspectedProps()!.type}
+          onClose={() => setInspectedProps(null)}
+        />
+      )}
+    </>
+  );
 };
 
 export default Graph;
