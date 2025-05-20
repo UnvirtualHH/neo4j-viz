@@ -158,10 +158,8 @@
 .editor-info {
   margin-top: 1rem;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  min-height: 30px;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .execute-btn {

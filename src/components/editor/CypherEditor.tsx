@@ -11,6 +11,7 @@ import "./CypherEditor.css";
 import { getFullSchema, runCypherQuery } from "../../service/cypher";
 import { DbSchema } from "@neo4j-cypher/language-support";
 import { isConnected } from "../../state/connection";
+import { Circle, Timer, Workflow } from "lucide-solid";
 
 type CypherEditorProps = {
   onQueryResult: (data: any[]) => void;
@@ -25,6 +26,13 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
   const [error, setError] = createSignal<string | null>(null);
   const [loading, setLoading] = createSignal(false);
   const [schema, setSchema] = createSignal<DbSchema | null>(null);
+  const [queryTime, setQueryTime] = createSignal<number | null>(null);
+  const [nodeCount, setNodeCount] = createSignal<number | null>(null);
+  const [relCount, setRelCount] = createSignal<number | null>(null);
+  const [labelStats, setLabelStats] = createSignal<Record<string, number>>({});
+  const [relTypeStats, setRelTypeStats] = createSignal<Record<string, number>>(
+    {}
+  );
 
   const [autocomplete, setAutocomplete] = createSignal<ReturnType<
     typeof useCypherAutocomplete
@@ -131,8 +139,20 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     setError(null);
 
     try {
-      const res = await runCypherQuery(inputRef.value);
-      props.onQueryResult(res);
+      const {
+        data,
+        executionTimeMs,
+        nodeCount,
+        relationshipCount,
+        labelStats,
+        relTypeStats,
+      } = await runCypherQuery(inputRef.value);
+      setQueryTime(executionTimeMs);
+      setNodeCount(nodeCount);
+      setRelCount(relationshipCount);
+      setLabelStats(labelStats);
+      setRelTypeStats(relTypeStats);
+      props.onQueryResult(data);
     } catch (err: any) {
       setError(err.message || "Unbekannter Fehler");
     } finally {
@@ -258,8 +278,55 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
             </button>
           </div>
 
-          <div class="editor-info">
+          <div class="editor-info flex flex-col gap-1">
             {error() && <div class="error-message">{error()}</div>}
+
+            {queryTime() !== null && (
+              <div class="text-sm text-gray-500 flex items-center gap-3">
+                <div class="flex items-center gap-1">
+                  <Timer size={16} strokeWidth={1.5} />
+                  <span>{queryTime()!.toFixed(1)} ms</span>
+                </div>
+                {nodeCount() !== null && (
+                  <div class="flex items-center gap-1">
+                    <Circle size={16} strokeWidth={1.5} />
+                    <span>{nodeCount()} Nodes</span>
+                  </div>
+                )}
+                {relCount() !== null && (
+                  <div class="flex items-center gap-1">
+                    <Workflow size={16} strokeWidth={1.5} />
+                    <span>{relCount()} Relations</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {Object.keys(labelStats()).length > 0 && (
+              <div class="text-sm text-gray-600 flex flex-wrap gap-4">
+                {Object.entries(labelStats()).map(([label, count]) => (
+                  <div class="flex items-center gap-1" title="Knoten mit Label">
+                    <Circle size={14} strokeWidth={1.5} />
+                    <span>
+                      {label}: {count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {Object.keys(relTypeStats()).length > 0 && (
+              <div class="text-sm text-gray-600 flex flex-wrap gap-4">
+                {Object.entries(relTypeStats()).map(([type, count]) => (
+                  <div class="flex items-center gap-1" title="Beziehungen">
+                    <Workflow size={14} strokeWidth={1.5} />
+                    <span>
+                      {type}: {count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

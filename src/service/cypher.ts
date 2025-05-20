@@ -1,20 +1,75 @@
-import { GraphRow } from "../types/graphdata";
+import {
+  CypherQueryResult,
+  GraphRow,
+  Neo4jNode,
+  Neo4jRelationship,
+} from "../types/graphdata";
 import { driverInstance } from "../state/connection";
 
-export async function runCypherQuery(query: string): Promise<GraphRow[]> {
+export async function runCypherQuery(
+  query: string
+): Promise<CypherQueryResult> {
   const currentDriver = driverInstance();
   if (!currentDriver) throw new Error("Keine Verbindung zur Datenbank");
 
   const session = currentDriver.session();
-  const result = await session.run(query);
-  
-  const parsed: GraphRow[] = result.records.map((record) => {
-    const [a, r, b] = record._fields;
-    return { a, r, b };
-  });
+  try {
+    const result = await session.run(query);
 
-  await session.close();
-  return parsed;
+    const nodeSet = new Set<string>();
+    const relSet = new Set<string>();
+
+    const labelCounter = new Map<string, number>();
+    const relTypeCounter = new Map<string, number>();
+
+    function countLabels(node?: Neo4jNode) {
+      if (!node) return;
+      for (const label of node.labels) {
+        labelCounter.set(label, (labelCounter.get(label) ?? 0) + 1);
+      }
+    }
+
+    function countRelType(r?: Neo4jRelationship) {
+      if (!r?.type) return;
+      relTypeCounter.set(r.type, (relTypeCounter.get(r.type) ?? 0) + 1);
+    }
+
+    const data: GraphRow[] = result.records.map((record) => {
+      const [a, r, b] = record._fields;
+
+      if (a?.elementId) nodeSet.add(a.elementId);
+      if (b?.elementId) nodeSet.add(b.elementId);
+      if (r?.type && a?.elementId && b?.elementId) {
+        relSet.add(`${a.elementId}->${r.type}->${b.elementId}`);
+      }
+
+      countLabels(a);
+      countLabels(b);
+      countRelType(r);
+
+      return { a, r, b };
+    });
+
+    const nodeCount = nodeSet.size;
+    const relationshipCount = relSet.size;
+
+    const availableAfter = result.summary.resultAvailableAfter;
+    const consumedAfter = result.summary.resultConsumedAfter;
+
+    const executionTimeMs =
+      (availableAfter?.toNumber?.() ?? 0) + (consumedAfter?.toNumber?.() ?? 0);
+
+    return {
+      data,
+      executionTimeMs,
+      nodeCount,
+      relationshipCount,
+      labelStats: Object.fromEntries(labelCounter),
+      relTypeStats: Object.fromEntries(relTypeCounter),
+    };
+  } finally {
+    await session.close();
+  }
 }
 
 export async function getFullSchema() {
