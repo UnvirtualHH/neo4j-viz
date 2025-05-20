@@ -158,8 +158,8 @@ const Graph: Component<GraphProps> = (props) => {
           onDragStart,
           onClick: () => {
             setInspectedProps({
-              data: a.properties,
-              title: a.labels?.join(", ") || "Node",
+              data: sourceNode.properties,
+              title: sourceNode.labels?.join(", ") || "Node",
               type: "node",
             });
           },
@@ -186,8 +186,8 @@ const Graph: Component<GraphProps> = (props) => {
             onDragStart,
             onClick: () => {
               setInspectedProps({
-                data: a.properties,
-                title: a.labels?.join(", ") || "Node",
+                data: targetNode.properties,
+                title: targetNode.labels?.join(", ") || "Node",
                 type: "node",
               });
             },
@@ -206,8 +206,9 @@ const Graph: Component<GraphProps> = (props) => {
           data: relation,
           onClick: () => {
             setInspectedProps({
-              data: a.properties,
-              title: a.labels?.join(", ") || "Relationship",
+              data: relation.properties,
+              title: relation.type,
+              // title: relation.labels?.join(", ") || "Relationship",
               type: "relationship",
             });
           },
