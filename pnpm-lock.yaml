@@ -39,6 +39,9 @@ importers:
       vite:
         specifier: ^6.3.5
         version: 6.3.5(jiti@2.4.2)(lightningcss@1.30.1)
+      vite-plugin-lucide-preprocess:
+        specifier: ^1.3.0
+        version: 1.3.0(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1))
       vite-plugin-solid:
         specifier: ^2.11.6
         version: 2.11.6(solid-js@1.9.7)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1))
@@ -873,6 +876,11 @@ packages:
   validate-html-nesting@1.2.2:
     resolution: {integrity: sha512-hGdgQozCsQJMyfK5urgFcWEqsSSrK63Awe0t/IMR0bZ0QMtnuaiHzThW81guu3qx9abLi99NEuiaN6P9gVYsNg==}
 
+  vite-plugin-lucide-preprocess@1.3.0:
+    resolution: {integrity: sha512-Eh/CfXWU/OHL1/49qOeYEY7+0KUHwxWeTs+rjiIcbunvZqCJN1n8lemX6Offu9SLaNlxfdDdNwtiatWlapIVxw==}
+    peerDependencies:
+      vite: '>=5'
+
   vite-plugin-solid@2.11.6:
     resolution: {integrity: sha512-Sl5CTqJTGyEeOsmdH6BOgalIZlwH3t4/y0RQuFLMGnvWMBvxb4+lq7x3BSiAw6etf0QexfNJW7HSOO/Qf7pigg==}
     peerDependencies:
@@ -1660,6 +1668,10 @@ snapshots:
       picocolors: 1.1.1
 
   validate-html-nesting@1.2.2: {}
+
+  vite-plugin-lucide-preprocess@1.3.0(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)):
+    dependencies:
+      vite: 6.3.5(jiti@2.4.2)(lightningcss@1.30.1)
 
   vite-plugin-solid@2.11.6(solid-js@1.9.7)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)):
     dependencies:
