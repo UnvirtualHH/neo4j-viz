@@ -14,7 +14,7 @@
   text-align: right;
   color: #999;
   background: #f4f4f4;
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.5;
   white-space: pre-wrap;
   overflow: hidden;
@@ -30,7 +30,7 @@
   width: calc(100% - 40px);
   height: 100%;
   padding: 1em;
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.5;
   white-space: pre-wrap;
   overflow: auto;
@@ -59,10 +59,55 @@
   font-weight: bold;
 }
 
+.label {
+  color: #005cc5;
+}
+
 .string {
   color: #032f62;
 }
 
-.label {
+.comment {
+  color: #6a737d;
+  font-style: italic;
+}
+
+.function {
   color: #6f42c1;
+}
+
+/* Autocomplete */
+
+.autocomplete-box {
+  position: absolute;
+  top: 50px;
+  left: 100px;
+  width: 240px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ccc;
+  font-family: monospace;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-item {
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+}
+
+.autocomplete-item.selected {
+  background: #eee;
+}
+
+.suggestion-label {
+  font-weight: bold;
+}
+
+.suggestion-type {
+  font-size: 0.8em;
+  color: #888;
 }
