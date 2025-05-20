@@ -1,0 +1,68 @@
+.editor-container {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 400px;
+  font-family: monospace;
+  border: 1px solid #ccc;
+  background: white;
+}
+
+.line-numbers {
+  width: 40px;
+  padding: 1em 0.5em;
+  text-align: right;
+  color: #999;
+  background: #f4f4f4;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow: hidden;
+  user-select: none;
+  z-index: 3;
+}
+
+.editor-input,
+.highlight-layer {
+  position: absolute;
+  left: 40px; /* match width of .line-numbers */
+  top: 0;
+  width: calc(100% - 40px);
+  height: 100%;
+  padding: 1em;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow: auto;
+  font-family: inherit;
+}
+
+.editor-input {
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: black;
+  border: none;
+  resize: none;
+  z-index: 4;
+}
+
+.highlight-layer {
+  z-index: 2;
+  pointer-events: none;
+  color: black;
+}
+
+/* Highlighting */
+.keyword {
+  color: #d73a49;
+  font-weight: bold;
+}
+
+.string {
+  color: #032f62;
+}
+
+.label {
+  color: #6f42c1;
+}
