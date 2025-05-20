@@ -180,21 +180,17 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
           spellcheck={false}
           autofocus
         ></textarea>
-      </div>
-      <div class="editor-actions">
+
         <button
-          class="btn execute-btn"
+          class="btn execute-btn floating-btn"
           onClick={executeQuery}
           disabled={loading()}
         >
           {loading() ? "Running..." : "Execute Query"}
         </button>
-
+      </div>
+      <div class="editor-info">
         {error() && <div class="error-message">{error()}</div>}
-
-        {result().length > 0 && (
-          <pre class="query-result">{JSON.stringify(result(), null, 2)}</pre>
-        )}
       </div>
     </div>
   );

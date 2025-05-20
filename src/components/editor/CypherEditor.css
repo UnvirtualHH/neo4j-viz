@@ -118,12 +118,13 @@
   color: #888;
 }
 
-.editor-actions {
+.editor-info {
   margin-top: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  min-height: 30px;
 }
 
 .execute-btn {
@@ -151,15 +152,26 @@
   font-weight: bold;
 }
 
-.query-result {
-  margin-top: 1rem;
-  padding: 1rem;
-  background-color: #1e1e1e;
-  color: #d4d4d4;
+.floating-btn {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 5;
+  background-color: #2d7ff9;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
   border-radius: 4px;
-  max-height: 300px;
-  overflow: auto;
-  font-family: monospace;
-  font-size: 0.9rem;
-  white-space: pre-wrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.floating-btn:hover:enabled {
+  background-color: #1c64d1;
+}
+
+.floating-btn:disabled {
+  background-color: #a0c4ff;
+  cursor: not-allowed;
 }
