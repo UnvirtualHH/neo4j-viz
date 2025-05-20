@@ -12,9 +12,11 @@ const CompletionKindMap: Record<number, string> = {
 };
 
 export function useCypherAutocomplete(schema: DbSchema) {
-  const [suggestions, setSuggestions] = createSignal<{ label: string; kind: string }[]>([]);
-  const [selectedIndex, setSelectedIndex] = createSignal(0);
+  const [suggestions, setSuggestions] = createSignal<
+    { label: string; kind: string }[]
+  >([]);
 
+  const [selectedIndex, setSelectedIndex] = createSignal(0);
   const updateSuggestions = (code: string, cursor: number) => {
     const items = autocomplete(code, schema, cursor).map((item) => ({
       label: item.label,
