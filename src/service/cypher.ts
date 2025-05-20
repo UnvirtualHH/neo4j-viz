@@ -1,8 +1,11 @@
 import { GraphRow } from "../types/graphdata";
-import { driver } from "./neo4j";
+import { driverInstance } from "../state/connection";
 
 export async function runCypherQuery(query: string): Promise<GraphRow[]> {
-  const session = driver.session();
+  const currentDriver = driverInstance();
+  if (!currentDriver) throw new Error("Keine Verbindung zur Datenbank");
+
+  const session = currentDriver.session();
   const result = await session.run(query);
 
   const parsed: GraphRow[] = result.records.map((record) => {
@@ -15,7 +18,10 @@ export async function runCypherQuery(query: string): Promise<GraphRow[]> {
 }
 
 export async function getFullSchema() {
-  const session = driver.session();
+  const currentDriver = driverInstance();
+  if (!currentDriver) throw new Error("Keine Verbindung zur Datenbank");
+
+  const session = currentDriver.session();
 
   try {
     const result = await session.executeRead(async (tx) => {
