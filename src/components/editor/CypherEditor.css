@@ -1,3 +1,9 @@
+.cypher-editor-wrapper {
+  padding: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
 .editor-container {
   position: relative;
   display: flex;
@@ -110,4 +116,50 @@
 .suggestion-type {
   font-size: 0.8em;
   color: #888;
+}
+
+.editor-actions {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.execute-btn {
+  background-color: #2d7ff9;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.execute-btn:hover:enabled {
+  background-color: #1c64d1;
+}
+
+.execute-btn:disabled {
+  background-color: #a0c4ff;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #b00020;
+  font-weight: bold;
+}
+
+.query-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  border-radius: 4px;
+  max-height: 300px;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
 }

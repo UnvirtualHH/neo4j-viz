@@ -1,17 +1,17 @@
+import { GraphRow } from "../types/graphdata";
 import { driver } from "./neo4j";
 
-export async function runCypherQuery(query: string) {
+export async function runCypherQuery(query: string): Promise<GraphRow[]> {
   const session = driver.session();
+  const result = await session.run(query);
 
-  try {
-    const result = await session.run(query);
-    return result.records.map((record) => record.toObject());
-  } catch (error) {
-    console.error("Neo4j query error:", error);
-    throw error;
-  } finally {
-    await session.close();
-  }
+  const parsed: GraphRow[] = result.records.map((record) => {
+    const [a, r, b] = record._fields;
+    return { a, r, b };
+  });
+
+  await session.close();
+  return parsed;
 }
 
 export async function getFullSchema() {

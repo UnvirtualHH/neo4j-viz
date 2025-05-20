@@ -1,11 +1,21 @@
-import { onMount, onCleanup, createSignal, createEffect } from "solid-js";
+import {
+  onMount,
+  onCleanup,
+  createSignal,
+  createEffect,
+  Component,
+} from "solid-js";
 import { useCypherAutocomplete } from "./autocomplete";
 import { highlightCypher } from "./highlight";
 import "./CypherEditor.css";
 import { getFullSchema, runCypherQuery } from "../../service/cypher";
 import { DbSchema } from "@neo4j-cypher/language-support";
 
-export default function CypherEditor() {
+type CypherEditorProps = {
+  onQueryResult: (data: any[]) => void;
+};
+
+const CypherEditor: Component<CypherEditorProps> = (props) => {
   let inputRef!: HTMLTextAreaElement;
   let highlightRef!: HTMLDivElement;
   let lineNumberRef!: HTMLDivElement;
@@ -113,6 +123,8 @@ export default function CypherEditor() {
     try {
       const res = await runCypherQuery(inputRef.value);
       setResult(res);
+      console.log("Raw Query Result", res);
+      props.onQueryResult(res);
     } catch (err: any) {
       setError(err.message || "Unbekannter Fehler");
     } finally {
@@ -133,7 +145,7 @@ export default function CypherEditor() {
   });
 
   return (
-    <div>
+    <div class="cypher-editor-wrapper">
       <div class="editor-container">
         {autocomplete()?.suggestions()!.length! > 0 && (
           <div class="autocomplete-box" ref={autocompleteRef}>
@@ -169,12 +181,16 @@ export default function CypherEditor() {
           autofocus
         ></textarea>
       </div>
-      <div>
-        <button class="btn" onClick={executeQuery} disabled={loading()}>
+      <div class="editor-actions">
+        <button
+          class="btn execute-btn"
+          onClick={executeQuery}
+          disabled={loading()}
+        >
           {loading() ? "Running..." : "Execute Query"}
         </button>
 
-        {error() && <div class="error">{error()}</div>}
+        {error() && <div class="error-message">{error()}</div>}
 
         {result().length > 0 && (
           <pre class="query-result">{JSON.stringify(result(), null, 2)}</pre>
@@ -182,4 +198,6 @@ export default function CypherEditor() {
       </div>
     </div>
   );
-}
+};
+
+export default CypherEditor;

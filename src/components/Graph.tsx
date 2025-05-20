@@ -1,3 +1,4 @@
+import { Component, createEffect, onCleanup, onMount } from "solid-js";
 import { Viewport } from "pixi-viewport";
 import {
   Application,
@@ -5,23 +6,27 @@ import {
   FederatedPointerEvent,
   PointData,
 } from "pixi.js";
-import { Component, onCleanup, onMount } from "solid-js";
 import { NetworkGraph, Node } from "../graph/graph";
 import debounce from "../utils/debounce";
+import { GraphRow } from "../types/graphdata";
 
-const Graph: Component = () => {
+type GraphProps = {
+  data: GraphRow[];
+};
+
+const Graph: Component<GraphProps> = (props) => {
   let canvasRef!: HTMLCanvasElement;
+  const pixiApp = new Application();
+  let viewport: Viewport;
+  let graph: NetworkGraph;
   let dragTarget: Container | null = null;
   let dragOffset: PointData = { x: 0, y: 0 };
-  const pixiApp = new Application();
 
-  const resizeHandler = debounce(
-    () =>
-      pixiApp.renderer.resize(canvasRef.clientWidth, canvasRef.clientHeight),
-    200
-  );
+  const resizeHandler = debounce(() => {
+    pixiApp.renderer.resize(canvasRef.clientWidth, canvasRef.clientHeight);
+  }, 200);
 
-  onMount(async () => {
+  const initPixi = async () => {
     await pixiApp.init({
       canvas: canvasRef,
       backgroundColor: 0x444444,
@@ -30,11 +35,7 @@ const Graph: Component = () => {
       antialias: true,
     });
 
-    pixiApp.stage.hitArea = pixiApp.screen;
-    pixiApp.stage.eventMode = "static";
-
-    const viewport = new Viewport({ events: pixiApp.renderer.events });
-
+    viewport = new Viewport({ events: pixiApp.renderer.events });
     viewport.drag().pinch().wheel().clampZoom({
       minWidth: 100,
       minHeight: 100,
@@ -42,91 +43,108 @@ const Graph: Component = () => {
       maxHeight: 10000,
     });
 
-    viewport.on("mousedown", () => {
-      viewport.cursor = "grabbing";
-    });
-
-    viewport.on("mouseup", () => {
-      viewport.cursor = "auto";
-    });
+    pixiApp.stage.hitArea = pixiApp.screen;
+    pixiApp.stage.eventMode = "static";
 
     pixiApp.stage.addChild(viewport);
-
-    const onDragMove = (event: FederatedPointerEvent) => {
-      if (!dragTarget) return;
-
-      const newPos = event.getLocalPosition(dragTarget.parent);
-      dragTarget.position.set(newPos.x - dragOffset.x, newPos.y - dragOffset.y);
-
-      graph.updateEdges();
-    };
-
-    const onDragStart = (event: FederatedPointerEvent) => {
-      const node = event.currentTarget;
-
-      dragTarget = node;
-
-      node.alpha = 0.5;
-      node.cursor = "grabbing";
-
-      const localPos = event.getLocalPosition(node);
-      dragOffset.x = localPos.x;
-      dragOffset.y = localPos.y;
-
-      viewport.pause = true;
-
-      pixiApp.stage.on("pointermove", onDragMove);
-    };
-
-    const onDragEnd = () => {
-      if (!dragTarget) return;
-
-      dragTarget.alpha = 1;
-      dragTarget.cursor = "pointer";
-
-      viewport.pause = false;
-
-      pixiApp.stage.off("pointermove", onDragMove);
-    };
-
-    pixiApp.stage.on("pointermove", onDragMove);
     pixiApp.stage.on("pointerup", onDragEnd);
+    window.addEventListener("resize", resizeHandler);
+  };
 
-    const graph = new NetworkGraph();
+  const onDragMove = (event: FederatedPointerEvent) => {
+    if (!dragTarget) return;
+    const newPos = event.getLocalPosition(dragTarget.parent);
+    dragTarget.position.set(newPos.x - dragOffset.x, newPos.y - dragOffset.y);
+    graph?.updateEdges();
+  };
 
-    for (let i = 0; i < 10; i++) {
-      graph.addNode(
-        i,
-        new Node({
+  const onDragStart = (event: FederatedPointerEvent) => {
+    dragTarget = event.currentTarget;
+    dragTarget.alpha = 0.5;
+    dragTarget.cursor = "grabbing";
+    const localPos = event.getLocalPosition(dragTarget);
+    dragOffset = { x: localPos.x, y: localPos.y };
+    pixiApp.stage.off("pointermove", onDragMove);
+    pixiApp.stage.on("pointermove", onDragMove);
+  };
+
+  const onDragEnd = () => {
+    if (!dragTarget) return;
+    dragTarget.alpha = 1;
+    dragTarget.cursor = "pointer";
+    dragTarget = null;
+    pixiApp.stage.off("pointermove", onDragMove);
+  };
+
+  const buildGraphFromData = () => {
+    if (!viewport) return;
+
+    graph?.destroy?.();
+    graph = new NetworkGraph();
+    const nodeMap = new Map<string, Node>();
+
+    for (const row of props.data) {
+      const a = row.a;
+      const b = row.b;
+      const r = row.r;
+
+      if (!a?.identity) continue;
+
+      const sourceId = a.elementId ?? a.identity.low.toString();
+
+      if (!nodeMap.has(sourceId)) {
+        const node = new Node({
           position: {
             x: Math.random() * pixiApp.screen.width,
             y: Math.random() * pixiApp.screen.height,
           },
           radius: 20,
-          color: 0xedab56,
-          onDragStart: onDragStart,
-        })
-      );
+          color: 0x3498db,
+          label: a.properties.name ?? sourceId,
+          onDragStart,
+        });
+
+        graph.addNode(sourceId, node);
+        nodeMap.set(sourceId, node);
+      }
+
+      if (b?.identity && r) {
+        const targetId = b.elementId ?? b.identity.low.toString();
+
+        if (!nodeMap.has(targetId)) {
+          const node = new Node({
+            position: {
+              x: Math.random() * pixiApp.screen.width,
+              y: Math.random() * pixiApp.screen.height,
+            },
+            radius: 20,
+            color: 0xe67e22,
+            label: b.properties.name ?? targetId,
+            onDragStart,
+          });
+
+          graph.addNode(targetId, node);
+          nodeMap.set(targetId, node);
+        }
+
+        graph.addEdge(sourceId, targetId, 0xdddddd, 2, r.type ?? "EDGE");
+      }
     }
 
-    for (let i = 0; i < 10; i++) {
-      graph.addEdge(
-        Math.floor(Math.random() * 10),
-        Math.floor(Math.random() * 10),
-        0xdddddd,
-        2,
-        `Edge ${i}`
-      );
-    }
-
+    viewport.removeChildren();
     viewport.addChild(graph);
+  };
 
-    window.addEventListener("resize", resizeHandler);
+  onMount(initPixi);
+
+  createEffect(() => {
+    if (props.data.length > 0) {
+      buildGraphFromData();
+    }
   });
 
   onCleanup(() => {
-    pixiApp.destroy();
-
+    pixiApp.destroy(true, { children: true });
     window.removeEventListener("resize", resizeHandler);
   });
 
