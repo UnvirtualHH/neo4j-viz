@@ -41,8 +41,8 @@ const BottomNav = () => {
               <Icon class="w-5 h-5" />
               {id === "connections" && (
                 <div
-                  class={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-green-500 border border-white transition-opacity ${
-                    isConnected() ? "opacity-100" : "opacity-0"
+                  class={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white transition-opacity ${
+                    isConnected() ? " bg-green-500" : "bg-red-500"
                   }`}
                 />
               )}
