@@ -1,26 +1,7 @@
-import {
-  Container,
-  FederatedPointerEvent,
-  Graphics,
-  PointData,
-  Text,
-} from "pixi.js";
-import { darkenColor } from "../utils/color";
+import { Graphics, Text } from "pixi.js";
+import { Data } from "../types/graphdata";
 import { getMidPoint, getOffsetPoint, getUnitVector } from "../utils/vector";
-
-type Data = {
-  [key: string]: any;
-};
-
-type NodeId = string | number;
-type NodeProperties = {
-  id: NodeId;
-  position: PointData;
-  radius: number;
-  color: number;
-  label: string;
-  onDragStart?: (event: FederatedPointerEvent) => void;
-};
+import Node from "./node";
 
 type EdgeProperties<T extends Data> = {
   startNode: Node;
@@ -30,62 +11,6 @@ type EdgeProperties<T extends Data> = {
   caption: keyof T;
   data: T;
 };
-
-class Node extends Graphics {
-  id: NodeId;
-  radius: number;
-  color: number;
-  margin: number;
-  label: string;
-
-  constructor(properties: NodeProperties) {
-    super();
-    this.id = properties.id;
-    this.position = properties.position;
-    this.radius = properties.radius;
-    this.color = properties.color;
-    this.margin = 5;
-    this.label = properties.label || "";
-
-    this.eventMode = "static";
-    this.cursor = "pointer";
-
-    this.on(
-      "pointerdown",
-      (event) => {
-        properties.onDragStart?.(event);
-      },
-      this
-    );
-
-    this.circle(0, 0, this.radius)
-      .fill(this.color)
-      .stroke({
-        color: darkenColor(this.color, 50),
-        width: 2,
-      });
-
-    const labelText = new Text({
-      text: this.label,
-      style: {
-        fontSize: 12,
-        fill: 0xffffff,
-        align: "center",
-      },
-      resolution: 2,
-    });
-
-    labelText.anchor.set(0.5);
-    labelText.x = 0;
-    labelText.y = 0;
-
-    this.addChild(labelText);
-  }
-
-  getCenter(): PointData {
-    return this.position;
-  }
-}
 
 class Edge<T extends Data = Data> extends Graphics {
   startNode: Node;
@@ -234,54 +159,5 @@ class Edge<T extends Data = Data> extends Graphics {
   }
 }
 
-class NetworkGraph extends Container {
-  nodes: Map<NodeId, Node> = new Map();
-  edges: Edge<Data>[] = [];
-
-  constructor() {
-    super();
-  }
-
-  addNode(properties: NodeProperties) {
-    const node = new Node(properties);
-    this.nodes.set(properties.id, node);
-    this.addChild(node);
-  }
-
-  addEdge<T extends Data>(
-    properties: Omit<EdgeProperties<T>, "startNode" | "endNode"> & {
-      startId: NodeId;
-      endId: NodeId;
-    }
-  ) {
-    const startNode = this.nodes.get(properties.startId);
-    const endNode = this.nodes.get(properties.endId);
-    if (!startNode || !endNode) {
-      throw new Error("Invalid node IDs for edge");
-    }
-
-    const edge = new Edge<T>({
-      ...properties,
-      startNode,
-      endNode,
-    });
-    this.edges.push(edge as unknown as Edge<Data>);
-    this.addChild(edge);
-  }
-
-  updateEdges() {
-    this.edges.forEach((edge) => edge.drawEdge());
-  }
-
-  updateEdgePositions(id: NodeId) {
-    const edges = this.edges.filter(
-      (edge) => edge.startNode.id === id || edge.endNode.id === id
-    );
-
-    edges.forEach((edge) => {
-      edge.updatePosition();
-    });
-  }
-}
-
-export { Edge, NetworkGraph, Node };
+export default Edge;
+export type { EdgeProperties };

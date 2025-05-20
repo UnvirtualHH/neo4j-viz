@@ -6,7 +6,8 @@ import {
   PointData,
 } from "pixi.js";
 import { Component, createEffect, onCleanup, onMount } from "solid-js";
-import { NetworkGraph, Node } from "../graph/graph";
+import NetworkGraph from "../graph/networkgraph";
+import Node from "../graph/node";
 import { GraphRow } from "../types/graphdata";
 import debounce from "../utils/debounce";
 
@@ -22,6 +23,9 @@ const Graph: Component<GraphProps> = (props) => {
   let dragTarget: Container | null = null;
   let dragOffset: PointData = { x: 0, y: 0 };
 
+  let isViewportDragging = false;
+  let lastPointerPosition: { x: number; y: number } | null = null;
+
   const resizeHandler = debounce(() => {
     pixiApp.renderer.resize(canvasRef.clientWidth, canvasRef.clientHeight);
   }, 200);
@@ -36,7 +40,7 @@ const Graph: Component<GraphProps> = (props) => {
     });
 
     viewport = new Viewport({ events: pixiApp.renderer.events });
-    viewport.drag().pinch().wheel().clampZoom({
+    viewport.pinch().wheel().clampZoom({
       minWidth: 100,
       minHeight: 100,
       maxWidth: 10000,
@@ -47,14 +51,37 @@ const Graph: Component<GraphProps> = (props) => {
     pixiApp.stage.eventMode = "static";
 
     pixiApp.stage.addChild(viewport);
-    pixiApp.stage.on("pointerup", onDragEnd);
+
+    canvasRef.addEventListener("pointerdown", (e) => {
+      if (dragTarget) return; // skip if dragging a node
+      isViewportDragging = true;
+      lastPointerPosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener("pointermove", (e) => {
+      if (!isViewportDragging || !lastPointerPosition) return;
+
+      const dx = e.clientX - lastPointerPosition.x;
+      const dy = e.clientY - lastPointerPosition.y;
+
+      viewport.x += dx;
+      viewport.y += dy;
+
+      lastPointerPosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener("pointerup", onDragEnd);
+    window.addEventListener("pointercancel", onDragEnd);
     window.addEventListener("resize", resizeHandler);
   };
 
-  const onDragMove = (event: FederatedPointerEvent) => {
+  const onDragMove = (event: PointerEvent) => {
     if (!dragTarget) return;
 
-    const newPos = event.getLocalPosition(dragTarget.parent);
+    const newPos = viewport.toLocal({
+      x: event.clientX,
+      y: event.clientY,
+    });
     dragTarget.position.set(newPos.x - dragOffset.x, newPos.y - dragOffset.y);
 
     graph.updateEdges();
@@ -74,15 +101,21 @@ const Graph: Component<GraphProps> = (props) => {
 
     viewport.pause = true;
 
-    pixiApp.stage.on("pointermove", onDragMove);
+    window.addEventListener("pointermove", onDragMove);
   };
 
   const onDragEnd = () => {
-    if (!dragTarget) return;
-    dragTarget.alpha = 1;
-    dragTarget.cursor = "pointer";
-    dragTarget = null;
-    pixiApp.stage.off("pointermove", onDragMove);
+    if (dragTarget) {
+      dragTarget.alpha = 1;
+      dragTarget.cursor = "pointer";
+      dragTarget = null;
+
+      window.removeEventListener("pointermove", onDragMove);
+      viewport.pause = false;
+    }
+
+    isViewportDragging = false;
+    lastPointerPosition = null;
   };
 
   const buildGraphFromData = () => {
@@ -164,6 +197,8 @@ const Graph: Component<GraphProps> = (props) => {
   onCleanup(() => {
     pixiApp.destroy(true, { children: true });
     window.removeEventListener("resize", resizeHandler);
+    window.removeEventListener("pointerup", onDragEnd);
+    window.removeEventListener("pointercancel", onDragEnd);
   });
 
   return <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />;

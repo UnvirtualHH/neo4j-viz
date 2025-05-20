@@ -1,7 +1,7 @@
+import { Clock, Database, Home, Settings, Star } from "lucide-solid";
 import { createSignal, Show } from "solid-js";
-import { Home, Star, Database, Clock, Settings } from "lucide-solid";
-import Databases from "./Databases";
 import { isConnected } from "../../state/connection";
+import Databases from "./Databases";
 
 const BottomNav = () => {
   const [active, setActive] = createSignal("home");

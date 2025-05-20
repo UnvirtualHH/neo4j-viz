@@ -1,3 +1,7 @@
+export type Data = {
+  [key: string]: any;
+};
+
 export type LabelStats = Record<string, number>;
 export type RelationshipTypeStats = Record<string, number>;
 
