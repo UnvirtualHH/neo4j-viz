@@ -23,9 +23,9 @@ export type Neo4jRelationship = {
 };
 
 export type GraphRow = {
-  a: Neo4jNode;
-  r?: Neo4jRelationship;
-  b?: Neo4jNode;
+  sourceNode: Neo4jNode;
+  relation?: Neo4jRelationship;
+  targetNode?: Neo4jNode;
 };
 
 export type CypherQueryResult = {

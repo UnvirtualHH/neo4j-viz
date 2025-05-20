@@ -53,7 +53,7 @@ const Graph: Component<GraphProps> = (props) => {
     pixiApp.stage.addChild(viewport);
 
     canvasRef.addEventListener("pointerdown", (e) => {
-      if (dragTarget) return; // skip if dragging a node
+      if (dragTarget) return;
       isViewportDragging = true;
       lastPointerPosition = { x: e.clientX, y: e.clientY };
     });
@@ -118,6 +118,7 @@ const Graph: Component<GraphProps> = (props) => {
     lastPointerPosition = null;
   };
 
+  // TODO: outsource?
   const buildGraphFromData = () => {
     if (!viewport) return;
 
@@ -125,14 +126,11 @@ const Graph: Component<GraphProps> = (props) => {
     graph = new NetworkGraph();
     const nodeMap = new Map<string, Node>();
 
-    for (const row of props.data) {
-      const a = row.a;
-      const b = row.b;
-      const r = row.r;
+    for (const { sourceNode, relation, targetNode } of props.data) {
+      if (!sourceNode?.identity) continue;
 
-      if (!a?.identity) continue;
-
-      const sourceId = a.elementId ?? a.identity.low.toString();
+      const sourceId =
+        sourceNode.elementId ?? sourceNode.identity.low.toString();
 
       if (!nodeMap.has(sourceId)) {
         const node = new Node({
@@ -143,7 +141,7 @@ const Graph: Component<GraphProps> = (props) => {
           },
           radius: 20,
           color: 0x3498db,
-          label: a.properties.name ?? sourceId,
+          label: sourceNode.properties.name ?? sourceId,
           onDragStart,
         });
 
@@ -151,8 +149,9 @@ const Graph: Component<GraphProps> = (props) => {
         nodeMap.set(sourceId, node);
       }
 
-      if (b?.identity && r) {
-        const targetId = b.elementId ?? b.identity.low.toString();
+      if (targetNode?.identity && relation) {
+        const targetId =
+          targetNode.elementId ?? targetNode.identity.low.toString();
 
         if (!nodeMap.has(targetId)) {
           const node = new Node({
@@ -163,7 +162,7 @@ const Graph: Component<GraphProps> = (props) => {
             },
             radius: 20,
             color: 0xe67e22,
-            label: b.properties.name ?? targetId,
+            label: targetNode.properties.name ?? targetId,
             onDragStart,
           });
 
@@ -177,7 +176,7 @@ const Graph: Component<GraphProps> = (props) => {
           color: 0xdddddd,
           thickness: 2,
           caption: "type",
-          data: r,
+          data: relation,
         });
       }
     }
