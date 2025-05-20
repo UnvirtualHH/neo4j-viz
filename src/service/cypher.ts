@@ -7,7 +7,7 @@ export async function runCypherQuery(query: string): Promise<GraphRow[]> {
 
   const session = currentDriver.session();
   const result = await session.run(query);
-
+  
   const parsed: GraphRow[] = result.records.map((record) => {
     const [a, r, b] = record._fields;
     return { a, r, b };

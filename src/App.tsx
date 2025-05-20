@@ -14,11 +14,11 @@ const App: Component = () => {
   });
 
   return (
-    <>
-      <CypherEditor onQueryResult={setGraphData} />
+    <div class="relative w-screen h-screen overflow-hidden">
       <Graph data={graphData()} />
+      <CypherEditor onQueryResult={setGraphData} />
       <BottomNav />
-    </>
+    </div>
   );
 };
 

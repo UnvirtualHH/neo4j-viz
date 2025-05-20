@@ -10,6 +10,7 @@ import { highlightCypher } from "./highlight";
 import "./CypherEditor.css";
 import { getFullSchema, runCypherQuery } from "../../service/cypher";
 import { DbSchema } from "@neo4j-cypher/language-support";
+import { isConnected } from "../../state/connection";
 
 type CypherEditorProps = {
   onQueryResult: (data: any[]) => void;
@@ -21,7 +22,6 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
   let lineNumberRef!: HTMLDivElement;
   let autocompleteRef!: HTMLDivElement;
 
-  const [result, setResult] = createSignal<any[]>([]);
   const [error, setError] = createSignal<string | null>(null);
   const [loading, setLoading] = createSignal(false);
   const [schema, setSchema] = createSignal<DbSchema | null>(null);
@@ -29,6 +29,11 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
   const [autocomplete, setAutocomplete] = createSignal<ReturnType<
     typeof useCypherAutocomplete
   > | null>(null);
+
+  const [minimized, setMinimized] = createSignal(false);
+  const [position, setPosition] = createSignal({ x: 0, y: 20 });
+  let dragOffset = { x: 0, y: 0 };
+  let dragging = false;
 
   createEffect(() => {
     if (schema()) {
@@ -85,6 +90,12 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      executeQuery();
+      return;
+    }
+
     const auto = autocomplete();
     if (!auto) return;
 
@@ -118,12 +129,9 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
   const executeQuery = async () => {
     setLoading(true);
     setError(null);
-    setResult([]);
 
     try {
       const res = await runCypherQuery(inputRef.value);
-      setResult(res);
-      console.log("Raw Query Result", res);
       props.onQueryResult(res);
     } catch (err: any) {
       setError(err.message || "Unbekannter Fehler");
@@ -132,66 +140,129 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     }
   };
 
-  onMount(async () => {
-    const fullSchema = await getFullSchema();
-    setSchema(fullSchema);
+  const onDragStartEditor = (e: MouseEvent) => {
+    dragging = true;
+    dragOffset = {
+      x: e.clientX - position().x,
+      y: e.clientY - position().y,
+    };
+  };
 
+  const onDragMove = (e: MouseEvent) => {
+    if (!dragging) return;
+    setPosition({
+      x: e.clientX - dragOffset.x,
+      y: e.clientY - dragOffset.y,
+    });
+  };
+
+  const onDragEnd = () => {
+    dragging = false;
+  };
+
+  createEffect(async () => {
+    if (isConnected()) {
+      try {
+        const fullSchema = await getFullSchema();
+        setSchema(fullSchema);
+      } catch (err) {
+        console.error("Fehler beim Laden des Schemas:", err);
+        setError("Verbindung konnte nicht hergestellt werden.");
+      }
+    }
+  });
+
+  onMount(async () => {
     syncHighlight();
+
+    const defaultWidth = 600;
+    const padding = 20;
+
+    setPosition({
+      x: window.innerWidth - defaultWidth - padding,
+      y: 20,
+    });
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousemove", onDragMove);
+    document.addEventListener("mouseup", onDragEnd);
   });
 
   onCleanup(() => {
     document.removeEventListener("mousedown", handleClickOutside);
+    document.removeEventListener("mousemove", onDragMove);
+    document.removeEventListener("mouseup", onDragEnd);
   });
 
   return (
-    <div class="cypher-editor-wrapper">
-      <div class="editor-container">
-        {autocomplete()?.suggestions()!.length! > 0 && (
-          <div class="autocomplete-box" ref={autocompleteRef}>
-            {autocomplete()
-              ?.suggestions()
-              .map((item, index) => (
-                <div
-                  class={`autocomplete-item ${
-                    index === autocomplete()?.selectedIndex() ? "selected" : ""
-                  }`}
-                  onMouseDown={() => insertAutocomplete(item.label)}
-                >
-                  <span class="suggestion-label">{item.label}</span>
-                  <span class="suggestion-type">{item.kind}</span>
-                </div>
-              ))}
-          </div>
-        )}
-
-        <div class="line-numbers" ref={lineNumberRef}></div>
-        <div
-          class="highlight-layer"
-          ref={highlightRef}
-          aria-hidden="true"
-        ></div>
-        <textarea
-          class="editor-input"
-          ref={inputRef}
-          onInput={syncHighlight}
-          onKeyDown={handleKeyDown}
-          onScroll={syncScroll}
-          spellcheck={false}
-          autofocus
-        ></textarea>
-
+    <div
+      class="floating-editor"
+      style={{
+        top: `${position().y}px`,
+        left: `${position().x}px`,
+      }}
+    >
+      <div class="floating-editor-header" onMouseDown={onDragStartEditor}>
+        <span>Cypher Editor</span>
         <button
-          class="btn execute-btn floating-btn"
-          onClick={executeQuery}
-          disabled={loading()}
+          class="floating-editor-minimize"
+          onClick={() => setMinimized(!minimized())}
         >
-          {loading() ? "Running..." : "Execute Query"}
+          {minimized() ? "⬍" : "–"}
         </button>
       </div>
-      <div class="editor-info">
-        {error() && <div class="error-message">{error()}</div>}
-      </div>
+
+      {!minimized() && (
+        <div class="floating-editor-body">
+          <div class="editor-container">
+            {autocomplete()?.suggestions()!.length! > 0 && (
+              <div class="autocomplete-box" ref={autocompleteRef}>
+                {autocomplete()
+                  ?.suggestions()
+                  .map((item, index) => (
+                    <div
+                      class={`autocomplete-item ${
+                        index === autocomplete()?.selectedIndex()
+                          ? "selected"
+                          : ""
+                      }`}
+                      onMouseDown={() => insertAutocomplete(item.label)}
+                    >
+                      <span class="suggestion-label">{item.label}</span>
+                      <span class="suggestion-type">{item.kind}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+
+            <div class="line-numbers" ref={lineNumberRef}></div>
+            <div
+              class="highlight-layer"
+              ref={highlightRef}
+              aria-hidden="true"
+            ></div>
+            <textarea
+              class="editor-input"
+              ref={inputRef}
+              onInput={syncHighlight}
+              onKeyDown={handleKeyDown}
+              onScroll={syncScroll}
+              spellcheck={false}
+            ></textarea>
+
+            <button
+              class="btn execute-btn floating-btn"
+              onClick={executeQuery}
+              disabled={loading()}
+            >
+              {loading() ? "Running..." : "Execute Query"}
+            </button>
+          </div>
+
+          <div class="editor-info">
+            {error() && <div class="error-message">{error()}</div>}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
