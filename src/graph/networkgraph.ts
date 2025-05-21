@@ -102,6 +102,8 @@ function applyForces(nodes) {
   private gravityConstant = 1.1;
   private forceConstant = 1000;
 
+  private animate = false;
+
   applyForces() {
     this.nodes.forEach((node) => {
       node.vx = node.position.x * -1 * this.gravityConstant;
@@ -136,7 +138,12 @@ function applyForces(nodes) {
   }
 
   startSimulation() {
+    if (this.animate) return;
+    this.animate = true;
+
     const loop = () => {
+      if (!this.animate) return;
+
       this.applyForces();
       this.nodes.forEach((node) => {
         const velX = node.vx / node.mass;
@@ -146,6 +153,9 @@ function applyForces(nodes) {
         node.position.y += velY;
       });
       this.updateEdges();
+
+      if (this.nodes.every((node) => node.vx > -10 && node.vy > -10))
+        this.animate = false;
 
       requestAnimationFrame(loop);
     };

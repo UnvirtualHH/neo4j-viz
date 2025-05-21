@@ -175,8 +175,6 @@ const Graph: Component<GraphProps> = (props) => {
 
         graph.addNode(node);
         nodeMap.set(sourceId, node);
-
-        graph.startSimulation();
       }
 
       if (targetNode?.identity && relation) {
@@ -232,6 +230,8 @@ const Graph: Component<GraphProps> = (props) => {
 
     viewport.removeChildren();
     viewport.addChild(graph);
+
+    graph.startSimulation();
   };
 
   onMount(initPixi);
