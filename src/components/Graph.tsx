@@ -19,12 +19,14 @@ import { updateNodeProperties } from "../service/cypher";
 import { GraphRow, Neo4jId } from "../types/graphdata";
 import debounce from "../utils/debounce";
 import PropertiesDialog from "./graph/PropertiesDialog";
+import Search from "./search/Search";
 
 type GraphProps = {
   data: GraphRow[];
 };
 
 const Graph: Component<GraphProps> = (props) => {
+  const [matchCount, setMatchCount] = createSignal(0);
   let canvasRef!: HTMLCanvasElement;
   const pixiApp = new Application();
   let viewport: Viewport;
@@ -247,8 +249,42 @@ const Graph: Component<GraphProps> = (props) => {
     window.removeEventListener("pointercancel", onDragEnd);
   });
 
+  const handleSearch = (term: string) => {
+    if (!graph || !term.trim()) {
+      graph?.clearHighlights?.();
+      setMatchCount(0);
+      return;
+    }
+
+    const lower = term.toLowerCase();
+    let count = 0;
+
+    graph.getNodes().forEach((node) => {
+      const match =
+        node.label?.toLowerCase().includes(lower) ||
+        Object.values(node.data || {}).some((val) =>
+          String(val).toLowerCase().includes(lower)
+        );
+      node.setHighlight(match);
+      if (match) count++;
+    });
+
+    graph.getEdges().forEach((edge) => {
+      const match =
+        edge.caption?.toString().toLowerCase().includes(lower) ||
+        Object.values(edge.data || {}).some((val) =>
+          String(val).toLowerCase().includes(lower)
+        );
+      edge.setHighlight(match);
+      if (match) count++;
+    });
+
+    setMatchCount(count);
+  };
+
   return (
     <>
+      <Search onSearch={handleSearch} matchCount={matchCount()} />
       <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />
       <Show when={inspectedProps()} keyed>
         {(inspected) => (

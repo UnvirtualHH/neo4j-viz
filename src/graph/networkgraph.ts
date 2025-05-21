@@ -52,6 +52,19 @@ class NetworkGraph extends Container {
     });
   }
 
+  getNodes() {
+    return this.nodes;
+  }
+
+  getEdges() {
+    return this.edges;
+  }
+
+  clearHighlights() {
+    this.nodes.forEach((n) => n.setHighlight(false));
+    this.edges.forEach((e) => e.setHighlight(false));
+  }
+
   /*
 function applyForces(nodes) {
 

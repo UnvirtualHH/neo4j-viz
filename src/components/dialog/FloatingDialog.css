@@ -7,8 +7,42 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   min-width: 250px;
   width: 400px;
+
+  /* Animation für Ein-/Ausblenden und Positionsänderung */
+  transition: opacity 300ms ease, transform 300ms ease;
 }
 
+/* Tray-Animation */
+.fade-slide-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.fade-slide-out {
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+  pointer-events: none;
+}
+
+/* Minimierter Zustand – Body fährt ein */
+.floating-dialog.minimized .floating-dialog-body {
+  opacity: 0;
+  max-height: 0;
+  padding: 0;
+  overflow: hidden;
+  transition: opacity 200ms ease, max-height 200ms ease, padding 200ms ease;
+}
+
+/* Standard Body-Zustand */
+.floating-dialog-body {
+  opacity: 1;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 1rem;
+  transition: opacity 200ms ease, max-height 200ms ease, padding 200ms ease;
+}
+
+/* Header */
 .floating-dialog-header {
   background: #1f2937;
   color: white;
@@ -22,48 +56,7 @@
   align-items: center;
 }
 
-.floating-dialog-close {
-  background: #4b5563;
-  color: white;
-  padding: 0.5rem 0.5rem;
-  font-size: 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.floating-dialog-minimize {
-  background: #4b5563;
-  color: white;
-  padding: 0.5rem 0.5rem;
-  font-size: 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.floating-dialog-tray {
-  background: #4b5563;
-  color: white;
-  padding: 0.5rem 0.5rem;
-  font-size: 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-
-.floating-dialog-minimize:hover {
-  background: #374151;
-}
-
-.floating-dialog-body {
-  padding: 1rem;
-  max-height: 80vh;
-  overflow-y: auto;
-  transition: opacity 0.2s ease, max-height 0.2s ease;
-}
-
+/* Resize-Handle */
 .resize-handle {
   position: absolute;
   width: 16px;
@@ -73,4 +66,23 @@
   cursor: nwse-resize;
   background: transparent;
   z-index: 10;
+}
+
+/* Buttons: Einheitlich gestylt */
+.floating-dialog-close,
+.floating-dialog-minimize,
+.floating-dialog-tray {
+  background: #4b5563;
+  color: white;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.floating-dialog-close:hover,
+.floating-dialog-minimize:hover,
+.floating-dialog-tray:hover {
+  background: #374151;
 }

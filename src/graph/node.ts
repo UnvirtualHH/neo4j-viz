@@ -23,6 +23,9 @@ class Node extends Graphics {
   mass: number;
   onClick?: (event: FederatedPointerEvent) => void;
 
+  #highlighted = false;
+  #labelText: Text;
+
   constructor(properties: NodeProperties) {
     super();
     this.id = properties.id;
@@ -53,14 +56,8 @@ class Node extends Graphics {
       properties.onClick?.(event);
     });
 
-    this.circle(0, 0, this.radius)
-      .fill(this.color)
-      .stroke({
-        color: darkenColor(this.color, 50),
-        width: 2,
-      });
-
-    const labelText = new Text({
+    // Label vorbereiten (Text-Objekt behalten für redraw)
+    this.#labelText = new Text({
       text: this.label,
       style: {
         fontSize: 12,
@@ -69,16 +66,53 @@ class Node extends Graphics {
       },
       resolution: 5,
     });
+    this.#labelText.anchor.set(0.5);
+    this.#labelText.x = 0;
+    this.#labelText.y = 0;
 
-    labelText.anchor.set(0.5);
-    labelText.x = 0;
-    labelText.y = 0;
+    this.redraw();
+  }
 
-    this.addChild(labelText);
+  redraw() {
+    this.clear();
+
+    const strokeColor = this.#highlighted
+      ? 0xffff00
+      : darkenColor(this.color, 50);
+    const strokeWidth = this.#highlighted ? 4 : 2;
+
+    this.circle(0, 0, this.radius);
+
+    this.fill(this.color);
+
+    this.stroke({
+      color: strokeColor,
+      width: strokeWidth,
+    });
+
+    if (this.#labelText.parent !== this) {
+      this.addChild(this.#labelText);
+    }
+  }
+
+  setHighlight(state: boolean) {
+    this.#highlighted = state;
+    this.redraw();
+  }
+
+  isHighlighted(): boolean {
+    return this.#highlighted;
   }
 
   getCenter(): PointData {
     return this.position;
+  }
+
+  get data() {
+    return {
+      label: this.label,
+      color: this.color,
+    };
   }
 }
 
