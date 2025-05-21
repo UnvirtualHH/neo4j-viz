@@ -15,10 +15,10 @@ import {
 } from "solid-js";
 import NetworkGraph from "../graph/networkgraph";
 import Node from "../graph/node";
+import { updateNodeProperties } from "../service/cypher";
 import { GraphRow, Neo4jId } from "../types/graphdata";
 import debounce from "../utils/debounce";
 import PropertiesDialog from "./graph/PropertiesDialog";
-import { updateNodeProperties } from "../service/cypher";
 
 type GraphProps = {
   data: GraphRow[];
@@ -173,6 +173,8 @@ const Graph: Component<GraphProps> = (props) => {
 
         graph.addNode(node);
         nodeMap.set(sourceId, node);
+
+        graph.startSimulation();
       }
 
       if (targetNode?.identity && relation) {

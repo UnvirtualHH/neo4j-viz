@@ -18,6 +18,9 @@ class Node extends Graphics {
   color: number;
   margin: number;
   label: string;
+  vx: number;
+  vy: number;
+  mass: number;
   onClick?: (event: FederatedPointerEvent) => void;
 
   constructor(properties: NodeProperties) {
@@ -28,6 +31,9 @@ class Node extends Graphics {
     this.color = properties.color;
     this.margin = 5;
     this.label = properties.label || "";
+    this.vx = 0;
+    this.vy = 0;
+    this.mass = (2 * Math.PI * this.radius) / 1.5;
 
     this.eventMode = "static";
     this.cursor = "pointer";
