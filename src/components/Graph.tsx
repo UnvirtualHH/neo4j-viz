@@ -14,7 +14,7 @@ import {
 } from "solid-js";
 import NetworkGraph from "../graph/networkgraph";
 import Node from "../graph/node";
-import { GraphRow } from "../types/graphdata";
+import { GraphRow, Neo4jId } from "../types/graphdata";
 import debounce from "../utils/debounce";
 import PropertiesDialog from "./graph/PropertiesDialog";
 
@@ -37,6 +37,8 @@ const Graph: Component<GraphProps> = (props) => {
     data: Record<string, any>;
     title: string;
     type: "node" | "relationship";
+    elementId?: string;
+    identity?: Neo4jId;
   } | null>(null);
 
   const resizeHandler = debounce(() => {
@@ -146,6 +148,7 @@ const Graph: Component<GraphProps> = (props) => {
         sourceNode.elementId ?? sourceNode.identity.low.toString();
 
       if (!nodeMap.has(sourceId)) {
+        console.log(sourceId);
         const node = new Node({
           id: sourceId,
           position: {
@@ -161,6 +164,8 @@ const Graph: Component<GraphProps> = (props) => {
               data: sourceNode.properties,
               title: sourceNode.labels?.join(", ") || "Node",
               type: "node",
+              elementId: sourceNode.elementId,
+              identity: sourceNode.identity,
             });
           },
         });
@@ -189,6 +194,8 @@ const Graph: Component<GraphProps> = (props) => {
                 data: targetNode.properties,
                 title: targetNode.labels?.join(", ") || "Node",
                 type: "node",
+                elementId: targetNode.elementId,
+                identity: targetNode.identity,
               });
             },
           });
@@ -210,6 +217,8 @@ const Graph: Component<GraphProps> = (props) => {
               title: relation.type,
               // title: relation.labels?.join(", ") || "Relationship",
               type: "relationship",
+              elementId: undefined,
+              identity: undefined,
             });
           },
         });
@@ -243,6 +252,8 @@ const Graph: Component<GraphProps> = (props) => {
           data={inspectedProps()!.data}
           title={inspectedProps()!.title}
           type={inspectedProps()!.type}
+          elementId={inspectedProps()!.elementId}
+          identity={inspectedProps()!.identity}
           onClose={() => setInspectedProps(null)}
         />
       )}
