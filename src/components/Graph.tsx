@@ -11,12 +11,14 @@ import {
   createSignal,
   onCleanup,
   onMount,
+  Show,
 } from "solid-js";
 import NetworkGraph from "../graph/networkgraph";
 import Node from "../graph/node";
 import { GraphRow, Neo4jId } from "../types/graphdata";
 import debounce from "../utils/debounce";
 import PropertiesDialog from "./graph/PropertiesDialog";
+import { updateNodeProperties } from "../service/cypher";
 
 type GraphProps = {
   data: GraphRow[];
@@ -148,7 +150,6 @@ const Graph: Component<GraphProps> = (props) => {
         sourceNode.elementId ?? sourceNode.identity.low.toString();
 
       if (!nodeMap.has(sourceId)) {
-        console.log(sourceId);
         const node = new Node({
           id: sourceId,
           position: {
@@ -247,16 +248,23 @@ const Graph: Component<GraphProps> = (props) => {
   return (
     <>
       <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />
-      {inspectedProps() && (
-        <PropertiesDialog
-          data={inspectedProps()!.data}
-          title={inspectedProps()!.title}
-          type={inspectedProps()!.type}
-          elementId={inspectedProps()!.elementId}
-          identity={inspectedProps()!.identity}
-          onClose={() => setInspectedProps(null)}
-        />
-      )}
+      <Show when={inspectedProps()} keyed>
+        {(inspected) => (
+          <PropertiesDialog
+            data={inspected.data}
+            title={inspected.title}
+            type={inspected.type}
+            elementId={inspected.elementId}
+            identity={inspected.identity}
+            onClose={() => setInspectedProps(null)}
+            onUpdateAll={(newData) => {
+              if (inspected.elementId) {
+                updateNodeProperties(inspected.elementId, newData);
+              }
+            }}
+          />
+        )}
+      </Show>
     </>
   );
 };
