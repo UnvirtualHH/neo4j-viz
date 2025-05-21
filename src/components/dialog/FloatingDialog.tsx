@@ -6,7 +6,7 @@ import {
   Show,
   type Component,
 } from "solid-js";
-import { X } from "lucide-solid";
+import { Maximize2, Minimize2, X } from "lucide-solid";
 
 import "./FloatingDialog.css";
 
@@ -106,12 +106,12 @@ const FloatingDialog: Component<FloatingDialogProps> = (props) => {
               class="floating-dialog-minimize"
               onClick={() => setMinimized(!minimized())}
             >
-              {minimized() ? "⬍" : "–"}
+              {minimized() ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
             </button>
           </Show>
           <Show when={props.closable}>
             <button
-              class="floating-dialog-minimize"
+              class="floating-dialog-close"
               onClick={props.onClose}
               title="Schließen"
             >
