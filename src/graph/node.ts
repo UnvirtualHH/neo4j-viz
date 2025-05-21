@@ -61,7 +61,7 @@ class Node extends Graphics {
         fill: 0xffffff,
         align: "center",
       },
-      resolution: 2,
+      resolution: 5,
     });
 
     labelText.anchor.set(0.5);

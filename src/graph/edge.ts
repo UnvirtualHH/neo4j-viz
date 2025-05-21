@@ -1,4 +1,4 @@
-import { FederatedPointerEvent, Graphics, Text } from "pixi.js";
+import { Circle, FederatedPointerEvent, Graphics, Text } from "pixi.js";
 import { Data } from "../types/graphdata";
 import { getMidPoint, getOffsetPoint, getUnitVector } from "../utils/vector";
 import Node from "./node";
@@ -43,11 +43,18 @@ class Edge<T extends Data = Data> extends Graphics {
       resolution: 5,
     });
 
-    this.drawEdge();
+    this.eventMode = "static";
+    this.cursor = "pointer";
+    const start = this.startNode.getCenter();
+    const end = this.endNode.getCenter();
+
+    this.hitArea = new Circle((start.x + end.x) / 2, (start.y + end.y) / 2, 10);
 
     this.on("pointertap", (event) => {
       properties.onClick?.(event);
     });
+
+    this.drawEdge();
   }
 
   drawLine() {
