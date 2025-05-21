@@ -27,6 +27,9 @@ type FloatingDialogProps = {
 
 const FloatingDialog: Component<FloatingDialogProps> = (props) => {
   const [hiddenToTray, setHiddenToTray] = createSignal(false);
+  const [animatingOut, setAnimatingOut] = createSignal(false);
+  const [minimized, setMinimized] = createSignal(false);
+  const [minimating, setMinimating] = createSignal(false);
   const [position, setPosition] = createSignal(
     props.initialPosition ?? { x: 100, y: 100 }
   );
@@ -35,7 +38,6 @@ const FloatingDialog: Component<FloatingDialogProps> = (props) => {
   );
   const [dragging, setDragging] = createSignal(false);
   const [resizing, setResizing] = createSignal(false);
-  const [minimized, setMinimized] = createSignal(false);
 
   let dragOffset = { x: 0, y: 0 };
   let resizeStart = { x: 0, y: 0, width: 0, height: 0 };
@@ -89,10 +91,33 @@ const FloatingDialog: Component<FloatingDialogProps> = (props) => {
     document.removeEventListener("mouseup", stopAll);
   });
 
+  const minimizeWithAnimation = () => {
+    setMinimating(true);
+    setTimeout(() => {
+      setMinimized(!minimized());
+      setMinimating(false);
+    }, 200);
+  };
+
+  const trayWithAnimation = () => {
+    setAnimatingOut(true);
+    setTimeout(() => {
+      setHiddenToTray(true);
+      setAnimatingOut(false);
+      addToTray({
+        id: props.title,
+        title: props.title,
+        restore: () => setHiddenToTray(false),
+      });
+    }, 300);
+  };
+
   return (
     <Show when={!hiddenToTray()}>
       <div
-        class={`floating-dialog ${props.class ?? ""}`}
+        class={`floating-dialog ${props.class ?? ""} 
+        ${animatingOut() ? "fade-slide-out" : "fade-slide-in"} 
+        ${minimized() ? "minimized" : ""}`}
         style={{
           top: `${position().y}px`,
           left: `${position().x}px`,
@@ -108,14 +133,7 @@ const FloatingDialog: Component<FloatingDialogProps> = (props) => {
             <Show when={props.trayable}>
               <button
                 class="floating-dialog-tray"
-                onClick={() => {
-                  setHiddenToTray(true);
-                  addToTray({
-                    id: props.title,
-                    title: props.title,
-                    restore: () => setHiddenToTray(false),
-                  });
-                }}
+                onClick={trayWithAnimation}
                 title="Verstecken"
               >
                 <EyeOff size={14} />
@@ -124,7 +142,7 @@ const FloatingDialog: Component<FloatingDialogProps> = (props) => {
             <Show when={props.minimizable}>
               <button
                 class="floating-dialog-minimize"
-                onClick={() => setMinimized(!minimized())}
+                onClick={minimizeWithAnimation}
               >
                 {minimized() ? (
                   <Maximize2 size={14} />

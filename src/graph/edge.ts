@@ -25,33 +25,40 @@ class Edge<T extends Data = Data> extends Graphics {
   text: Text;
   onClick?: (event: FederatedPointerEvent) => void;
 
+  #highlighted = false;
+  #baseColor: number;
+  #baseThickness: number;
+
   constructor(properties: EdgeProperties<T>) {
     super();
 
     this.startNode = properties.startNode;
     this.endNode = properties.endNode;
     this.color = properties.color;
+    this.#baseColor = properties.color;
     this.thickness = properties.thickness;
-    this.tipLength = properties.thickness * 6;
-    this.tipWidth = properties.thickness * 6;
+    this.#baseThickness = properties.thickness;
+    this.tipLength = this.thickness * 6;
+    this.tipWidth = this.thickness * 6;
     this.caption = properties.caption;
     this.data = properties.data;
     this.onClick = properties.onClick;
+
     this.text = new Text({
-      text: this.data[this.caption],
+      text: String(this.data[this.caption]),
       style: { fontSize: 12, fill: this.color },
       resolution: 5,
     });
 
     this.eventMode = "static";
     this.cursor = "pointer";
+
     const start = this.startNode.getCenter();
     const end = this.endNode.getCenter();
-
     this.hitArea = new Circle((start.x + end.x) / 2, (start.y + end.y) / 2, 10);
 
     this.on("pointertap", (event) => {
-      properties.onClick?.(event);
+      this.onClick?.(event);
     });
 
     this.drawEdge();
@@ -139,26 +146,18 @@ class Edge<T extends Data = Data> extends Graphics {
   drawText() {
     const start = this.startNode.getCenter();
     const end = this.endNode.getCenter();
-
     const { x: midX, y: midY } = getMidPoint(start, end);
-
     const dx = end.x - start.x;
     const dy = end.y - start.y;
     const angle = Math.atan2(dy, dx);
 
     this.text.x = midX;
     this.text.y = midY;
-
     this.text.anchor.set(0.5);
-    if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
-      this.text.rotation = angle + Math.PI;
-    } else {
-      this.text.rotation = angle;
-    }
+    this.text.rotation =
+      angle > Math.PI / 2 || angle < -Math.PI / 2 ? angle + Math.PI : angle;
 
-    if (!this.text.parent) {
-      this.addChild(this.text);
-    }
+    if (!this.text.parent) this.addChild(this.text);
   }
 
   drawEdge() {
@@ -170,6 +169,20 @@ class Edge<T extends Data = Data> extends Graphics {
 
   updatePosition() {
     this.drawEdge();
+  }
+
+  setHighlight(state: boolean) {
+    this.#highlighted = state;
+
+    this.color = state ? 0xffff00 : this.#baseColor;
+    this.thickness = state ? this.#baseThickness * 1.5 : this.#baseThickness;
+
+    this.text.style.fill = this.color;
+    this.drawEdge();
+  }
+
+  isHighlighted(): boolean {
+    return this.#highlighted;
   }
 }
 

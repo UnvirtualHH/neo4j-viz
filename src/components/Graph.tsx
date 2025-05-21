@@ -19,6 +19,7 @@ import { GraphRow, Neo4jId } from "../types/graphdata";
 import debounce from "../utils/debounce";
 import PropertiesDialog from "./graph/PropertiesDialog";
 import { updateNodeProperties } from "../service/cypher";
+import Search from "./search/Search";
 
 type GraphProps = {
   data: GraphRow[];
@@ -245,8 +246,37 @@ const Graph: Component<GraphProps> = (props) => {
     window.removeEventListener("pointercancel", onDragEnd);
   });
 
+  const handleSearch = (term: string) => {
+    if (!graph || !term.trim()) {
+      graph?.clearHighlights?.();
+      return;
+    }
+
+    const lower = term.toLowerCase();
+
+    graph.getNodes().forEach((node) => {
+      const match =
+        node.label?.toLowerCase().includes(lower) ||
+        Object.values(node.data || {}).some((val) =>
+          String(val).toLowerCase().includes(lower)
+        );
+      console.log(node.label, match);
+      node.setHighlight(match);
+    });
+
+    graph.getEdges().forEach((edge) => {
+      const match =
+        edge.caption?.toString().toLowerCase().includes(lower) ||
+        Object.values(edge.data || {}).some((val) =>
+          String(val).toLowerCase().includes(lower)
+        );
+      edge.setHighlight(match);
+    });
+  };
+
   return (
     <>
+      <Search onSearch={handleSearch} />
       <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />
       <Show when={inspectedProps()} keyed>
         {(inspected) => (
