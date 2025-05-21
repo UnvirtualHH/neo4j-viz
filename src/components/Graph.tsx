@@ -26,6 +26,7 @@ type GraphProps = {
 };
 
 const Graph: Component<GraphProps> = (props) => {
+  const [matchCount, setMatchCount] = createSignal(0);
   let canvasRef!: HTMLCanvasElement;
   const pixiApp = new Application();
   let viewport: Viewport;
@@ -249,10 +250,12 @@ const Graph: Component<GraphProps> = (props) => {
   const handleSearch = (term: string) => {
     if (!graph || !term.trim()) {
       graph?.clearHighlights?.();
+      setMatchCount(0);
       return;
     }
 
     const lower = term.toLowerCase();
+    let count = 0;
 
     graph.getNodes().forEach((node) => {
       const match =
@@ -260,8 +263,8 @@ const Graph: Component<GraphProps> = (props) => {
         Object.values(node.data || {}).some((val) =>
           String(val).toLowerCase().includes(lower)
         );
-      console.log(node.label, match);
       node.setHighlight(match);
+      if (match) count++;
     });
 
     graph.getEdges().forEach((edge) => {
@@ -271,12 +274,15 @@ const Graph: Component<GraphProps> = (props) => {
           String(val).toLowerCase().includes(lower)
         );
       edge.setHighlight(match);
+      if (match) count++;
     });
+
+    setMatchCount(count);
   };
 
   return (
     <>
-      <Search onSearch={handleSearch} />
+      <Search onSearch={handleSearch} matchCount={matchCount()} />
       <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />
       <Show when={inspectedProps()} keyed>
         {(inspected) => (
