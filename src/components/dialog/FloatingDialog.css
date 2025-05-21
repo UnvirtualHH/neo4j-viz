@@ -25,7 +25,7 @@
 .floating-dialog-close {
   background: #4b5563;
   color: white;
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.5rem;
   font-size: 0.8rem;
   border-radius: 4px;
   cursor: pointer;
@@ -35,7 +35,7 @@
 .floating-dialog-minimize {
   background: #4b5563;
   color: white;
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.5rem;
   font-size: 0.8rem;
   border-radius: 4px;
   cursor: pointer;
