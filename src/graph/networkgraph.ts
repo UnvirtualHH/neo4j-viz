@@ -65,42 +65,8 @@ class NetworkGraph extends Container {
     this.edges.forEach((e) => e.setHighlight(false));
   }
 
-  /*
-function applyForces(nodes) {
-
-  // apply force towards centre
-  nodes.forEach(node => {
-    gravity = node.pos.copy().mult(-1).mult(gravityConstant)
-    node.force = gravity
-  })
-
-  // apply repulsive force between nodes
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      pos = nodes[i].pos
-      dir = nodes[j].pos.copy().sub(pos)
-      force = dir.div(dir.mag() * dir.mag())
-      force.mult(forceConstant)
-      nodes[i].force.add(force.copy().mult(-1))
-      nodes[j].force.add(force)
-    }
-  }
-
-  // apply forces applied by connections
-  nodeCon.forEach(con => {
-    let node1 = nodes[con[0]]
-    let node2 = nodes[con[1]]
-    let maxDis = con[2]
-    let dis = node1.pos.copy().sub(node2.pos)
-    diff = dis.mag() - maxDis
-    node1.force.sub(dis)
-    node2.force.add(dis)
-  })
-}
-  */
-
   private gravityConstant = 1.1;
-  private forceConstant = 1000;
+  private forceConstant = 6000;
 
   private animate = false;
 
@@ -135,11 +101,46 @@ function applyForces(nodes) {
         this.nodes[j].vy += forceY;
       }
     }
+
+    this.edges.forEach((edge) => {
+      const startNode = edge.startNode;
+      const endNode = edge.endNode;
+
+      const x1 = startNode.position.x;
+      const y1 = startNode.position.y;
+      const x2 = endNode.position.x;
+      const y2 = endNode.position.y;
+
+      const dirX = x2 - x1;
+      const dirY = y2 - y1;
+
+      const distSq = dirX * dirX + dirY * dirY;
+      if (distSq === 0) return;
+
+      const factor = this.forceConstant / distSq;
+
+      const forceX = dirX * factor;
+      const forceY = dirY * factor;
+
+      startNode.vx -= forceX;
+      startNode.vy -= forceY;
+
+      endNode.vx += forceX;
+      endNode.vy += forceY;
+    });
   }
 
   startSimulation() {
     if (this.animate) return;
     this.animate = true;
+
+    const layout = () => {
+      this.nodes.forEach((node, i) => {
+        node.x = 0 + 500 * Math.sin((2 * Math.PI * i) / this.nodes.length);
+
+        node.y = 0 + 500 * Math.cos((2 * Math.PI * i) / this.nodes.length);
+      });
+    };
 
     const loop = () => {
       if (!this.animate) return;
@@ -160,6 +161,7 @@ function applyForces(nodes) {
       requestAnimationFrame(loop);
     };
 
+    layout();
     requestAnimationFrame(loop);
   }
 }
