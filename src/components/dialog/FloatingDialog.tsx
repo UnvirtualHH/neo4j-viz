@@ -6,9 +6,10 @@ import {
   Show,
   type Component,
 } from "solid-js";
-import { Maximize2, Minimize2, X } from "lucide-solid";
+import { EyeOff, Maximize2, Minimize2, X } from "lucide-solid";
 
 import "./FloatingDialog.css";
+import { addToTray } from "../../store/dialog";
 
 type FloatingDialogProps = {
   title: string;
@@ -18,12 +19,14 @@ type FloatingDialogProps = {
   resizable?: boolean;
   minimizable?: boolean;
   draggable?: boolean;
+  trayable?: boolean;
   onClose?: () => void;
   children: JSX.Element;
   class?: string;
 };
 
 const FloatingDialog: Component<FloatingDialogProps> = (props) => {
+  const [hiddenToTray, setHiddenToTray] = createSignal(false);
   const [position, setPosition] = createSignal(
     props.initialPosition ?? { x: 100, y: 100 }
   );
@@ -87,57 +90,79 @@ const FloatingDialog: Component<FloatingDialogProps> = (props) => {
   });
 
   return (
-    <div
-      class={`floating-dialog ${props.class ?? ""}`}
-      style={{
-        top: `${position().y}px`,
-        left: `${position().x}px`,
-        width: `${size().width}px`,
-        height: minimized() ? "auto" : `${size().height}px`,
-        position: "absolute",
-        "z-index": 2000,
-      }}
-    >
-      <div class="floating-dialog-header" onMouseDown={onMouseDownHeader}>
-        <span class="truncate">{props.title}</span>
-        <div class="flex gap-1 items-center">
-          <Show when={props.minimizable}>
-            <button
-              class="floating-dialog-minimize"
-              onClick={() => setMinimized(!minimized())}
-            >
-              {minimized() ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
-            </button>
-          </Show>
-          <Show when={props.closable}>
-            <button
-              class="floating-dialog-close"
-              onClick={props.onClose}
-              title="Schließen"
-            >
-              <X size={14} />
-            </button>
-          </Show>
+    <Show when={!hiddenToTray()}>
+      <div
+        class={`floating-dialog ${props.class ?? ""}`}
+        style={{
+          top: `${position().y}px`,
+          left: `${position().x}px`,
+          width: `${size().width}px`,
+          height: minimized() ? "auto" : `${size().height}px`,
+          position: "absolute",
+          "z-index": 2000,
+        }}
+      >
+        <div class="floating-dialog-header" onMouseDown={onMouseDownHeader}>
+          <span class="truncate">{props.title}</span>
+          <div class="flex gap-1 items-center">
+            <Show when={props.trayable}>
+              <button
+                class="floating-dialog-tray"
+                onClick={() => {
+                  setHiddenToTray(true);
+                  addToTray({
+                    id: props.title,
+                    title: props.title,
+                    restore: () => setHiddenToTray(false),
+                  });
+                }}
+                title="Verstecken"
+              >
+                <EyeOff size={14} />
+              </button>
+            </Show>
+            <Show when={props.minimizable}>
+              <button
+                class="floating-dialog-minimize"
+                onClick={() => setMinimized(!minimized())}
+              >
+                {minimized() ? (
+                  <Maximize2 size={14} />
+                ) : (
+                  <Minimize2 size={14} />
+                )}
+              </button>
+            </Show>
+            <Show when={props.closable}>
+              <button
+                class="floating-dialog-close"
+                onClick={props.onClose}
+                title="Schließen"
+              >
+                <X size={14} />
+              </button>
+            </Show>
+          </div>
         </div>
+
+        {!minimized() && (
+          <div
+            class="floating-dialog-body"
+            style={{ height: `calc(100% - 2.5rem)` }}
+          >
+            {props.children}
+          </div>
+        )}
+
+        {!minimized() && (
+          <div
+            class="resize-handle"
+            onMouseDown={onMouseDownResize}
+            title="Größe ändern"
+          />
+        )}
       </div>
-
-      {!minimized() && (
-        <div
-          class="floating-dialog-body"
-          style={{ height: `calc(100% - 2.5rem)` }}
-        >
-          {props.children}
-        </div>
-      )}
-
-      {!minimized() && (
-        <div
-          class="resize-handle"
-          onMouseDown={onMouseDownResize}
-          title="Größe ändern"
-        />
-      )}
-    </div>
+    </Show>
   );
 };
 

@@ -1,4 +1,4 @@
-import { driverInstance } from "../state/connection";
+import { driverInstance } from "../store/connection";
 import {
   CypherQueryResult,
   GraphRow,

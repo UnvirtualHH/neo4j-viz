@@ -4,7 +4,7 @@ import CypherEditor from "./components/editor/CypherEditor";
 import BottomNav from "./components/layout/BottomNav";
 
 import { onMount } from "solid-js";
-import { restoreNeo4jConnection } from "./state/connection";
+import { restoreNeo4jConnection } from "./store/connection";
 
 const App: Component = () => {
   const [graphData, setGraphData] = createSignal<any[]>([]);

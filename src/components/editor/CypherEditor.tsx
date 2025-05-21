@@ -10,7 +10,7 @@ import { highlightCypher } from "./highlight";
 import "./CypherEditor.css";
 import { getFullSchema, runCypherQuery } from "../../service/cypher";
 import { DbSchema } from "@neo4j-cypher/language-support";
-import { isConnected } from "../../state/connection";
+import { isConnected } from "../../store/connection";
 import { Circle, Timer, Workflow } from "lucide-solid";
 import FloatingDialog from "../dialog/FloatingDialog";
 import { autoDockPosition } from "../dialog/autoDockPosition";
@@ -200,6 +200,7 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
       minimizable={true}
       draggable={true}
       resizable={true}
+      trayable={true}
       onClose={() => setMinimized(true)}
     >
       <div class="editor-container">

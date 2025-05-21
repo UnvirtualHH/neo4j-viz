@@ -1,7 +1,8 @@
 import { Clock, Database, Home, Settings, Star } from "lucide-solid";
 import { createSignal, Show } from "solid-js";
-import { isConnected } from "../../state/connection";
+import { isConnected } from "../../store/connection";
 import Databases from "./Databases";
+import { removeFromTray, trayDialogs } from "../../store/dialog";
 
 const BottomNav = () => {
   const [active, setActive] = createSignal("home");
@@ -53,6 +54,22 @@ const BottomNav = () => {
             </span>
           </button>
         ))}
+        <Show when={trayDialogs.length > 0}>
+          <div class="flex gap-2 border-l pl-4 ml-4">
+            {trayDialogs.map((d) => (
+              <button
+                onClick={() => {
+                  d.restore();
+                  removeFromTray(d.id);
+                }}
+                title={d.title}
+                class="p-1 text-gray-500 hover:text-blue-600"
+              >
+                <Database class="w-5 h-5" />
+              </button>
+            ))}
+          </div>
+        </Show>
       </div>
     </>
   );
