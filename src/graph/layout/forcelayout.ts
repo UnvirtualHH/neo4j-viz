@@ -5,7 +5,7 @@ import Edge from "../edge";
 export class ForceGraphLayout implements LayoutStrategy {
   private gravityConstant = 0.05;
   private repulsionConstant = 3000;
-  private springLength = 120;
+  private springLength = 300;
   private springStiffness = 0.1;
 
   apply(nodes: Node[], edges: Edge<any>[]) {
