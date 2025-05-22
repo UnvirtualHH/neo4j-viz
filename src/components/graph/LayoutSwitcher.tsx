@@ -1,7 +1,8 @@
 import { Component } from "solid-js";
 import { Zap, Orbit } from "lucide-solid";
+import { TreeDeciduous } from "lucide-solid";
 
-export type LayoutType = "force" | "euler" | "circle";
+export type LayoutType = "force" | "euler" | "tree";
 
 type LayoutSwitcherProps = {
   onSelectLayout: (layout: LayoutType) => void;
@@ -12,6 +13,7 @@ const LayoutSwitcher: Component<LayoutSwitcherProps> = (props) => {
   const layouts: { id: LayoutType; label: string; icon: typeof Zap }[] = [
     { id: "force", label: "Force Layout", icon: Zap },
     { id: "euler", label: "Euler Physics", icon: Orbit },
+    { id: "tree", label: "Tree Layout", icon: TreeDeciduous },
   ];
 
   return (

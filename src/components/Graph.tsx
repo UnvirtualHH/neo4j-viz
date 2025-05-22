@@ -25,6 +25,7 @@ import ZoomControl from "./graph/ZoomControl";
 import { ForceGraphLayout } from "../graph/layout/forcelayout";
 import { EulerGraphLayout } from "../graph/layout/eulerlayout";
 import LayoutSwitcher, { LayoutType } from "./graph/LayoutSwitcher";
+import { TreeLayout } from "../graph/layout/treelayout";
 
 type GraphProps = {
   data: GraphRow[];
@@ -284,6 +285,8 @@ const Graph: Component<GraphProps> = (props) => {
       graph.setLayoutStrategy(new ForceGraphLayout());
     } else if (selectedLayout() === "euler") {
       graph.setLayoutStrategy(new EulerGraphLayout());
+    } else if (selectedLayout() === "tree") {
+      graph.setLayoutStrategy(new TreeLayout());
     }
 
     const nodeMap = new Map<string, Node>();
