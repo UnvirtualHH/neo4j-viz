@@ -78,11 +78,27 @@ const Graph: Component<GraphProps> = (props) => {
     });
 
     viewport = new Viewport({ events: pixiApp.renderer.events });
-    viewport.pinch().wheel().clampZoom({
+    viewport.pinch().clampZoom({
       minWidth: 100,
       minHeight: 100,
       maxWidth: 10000,
       maxHeight: 10000,
+    });
+
+    canvasRef.addEventListener("wheel", (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+
+        const scaleFactor = 1.1;
+        const zoomIn = e.deltaY < 0;
+
+        const currentZoom = viewport.scale.x;
+        const newScale = zoomIn
+          ? Math.min(currentZoom * scaleFactor, maxZoom)
+          : Math.max(currentZoom / scaleFactor, minZoom);
+
+        setZoomTo(newScale);
+      }
     });
 
     pixiApp.stage.hitArea = pixiApp.screen;
@@ -111,11 +127,6 @@ const Graph: Component<GraphProps> = (props) => {
     window.addEventListener("pointerup", onDragEnd);
     window.addEventListener("pointercancel", onDragEnd);
     window.addEventListener("resize", resizeHandler);
-
-    viewport.on("zoomed", () => {
-      const zoom = viewport.scale.x;
-      setZoomLevel(parseFloat(zoom.toFixed(2)));
-    });
 
     setViewportReady(true);
 
