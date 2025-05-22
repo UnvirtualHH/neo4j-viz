@@ -2,13 +2,22 @@ import { Container } from "pixi.js";
 import { Data } from "../types/graphdata";
 import Edge, { EdgeProperties } from "./edge";
 import Node, { NodeId, NodeProperties } from "./node";
+import { LayoutStrategy } from "./layout/layoutstrategy";
+import { ForceGraphLayout } from "./layout/forcelayout";
 
 class NetworkGraph extends Container {
-  nodes: Node[] = [];
-  edges: Edge<Data>[] = [];
+  private nodes: Node[] = [];
+  private edges: Edge<Data>[] = [];
+
+  private animate = false;
+  private layoutStrategy: LayoutStrategy = new ForceGraphLayout();
 
   constructor() {
     super();
+  }
+
+  setLayoutStrategy(strategy: LayoutStrategy) {
+    this.layoutStrategy = strategy;
   }
 
   addNode(properties: NodeProperties) {
@@ -65,103 +74,58 @@ class NetworkGraph extends Container {
     this.edges.forEach((e) => e.setHighlight(false));
   }
 
-  private gravityConstant = 1.1;
-  private forceConstant = 6000;
-
-  private animate = false;
-
-  applyForces() {
-    this.nodes.forEach((node) => {
-      node.vx = node.position.x * -1 * this.gravityConstant;
-      node.vy = node.position.y * -1 * this.gravityConstant;
-    });
-
-    for (let i = 0; i < this.nodes.length; i++) {
-      for (let j = i + 1; j < this.nodes.length; j++) {
-        const x1 = this.nodes[i].position.x;
-        const y1 = this.nodes[i].position.y;
-        const x2 = this.nodes[j].position.x;
-        const y2 = this.nodes[j].position.y;
-
-        const dirX = x2 - x1;
-        const dirY = y2 - y1;
-
-        const distSq = dirX * dirX + dirY * dirY;
-        if (distSq === 0) continue;
-
-        const factor = this.forceConstant / distSq;
-
-        const forceX = dirX * factor;
-        const forceY = dirY * factor;
-
-        this.nodes[i].vx -= forceX;
-        this.nodes[i].vy -= forceY;
-
-        this.nodes[j].vx += forceX;
-        this.nodes[j].vy += forceY;
-      }
-    }
-
-    this.edges.forEach((edge) => {
-      const startNode = edge.startNode;
-      const endNode = edge.endNode;
-
-      const x1 = startNode.position.x;
-      const y1 = startNode.position.y;
-      const x2 = endNode.position.x;
-      const y2 = endNode.position.y;
-
-      const dirX = x2 - x1;
-      const dirY = y2 - y1;
-
-      const distSq = dirX * dirX + dirY * dirY;
-      if (distSq === 0) return;
-
-      const factor = this.forceConstant / distSq;
-
-      const forceX = dirX * factor;
-      const forceY = dirY * factor;
-
-      startNode.vx -= forceX;
-      startNode.vy -= forceY;
-
-      endNode.vx += forceX;
-      endNode.vy += forceY;
-    });
-  }
-
   startSimulation() {
     if (this.animate) return;
     this.animate = true;
 
-    const layout = () => {
-      this.nodes.forEach((node, i) => {
-        node.x = 0 + 500 * Math.sin((2 * Math.PI * i) / this.nodes.length);
+    const radius = 400;
+    const step = (2 * Math.PI) / this.nodes.length;
+    this.nodes.forEach((node, i) => {
+      node.position.x = radius * Math.cos(i * step);
+      node.position.y = radius * Math.sin(i * step);
+      node.vx = 0;
+      node.vy = 0;
+    });
 
-        node.y = 0 + 500 * Math.cos((2 * Math.PI * i) / this.nodes.length);
-      });
-    };
+    let frameCount = 0;
+    const maxFrames = 500;
+    const velocityThreshold = 0.1;
+    const damping = 0.85;
 
     const loop = () => {
       if (!this.animate) return;
 
-      this.applyForces();
+      frameCount++;
+
+      if (this.layoutStrategy?.apply) {
+        this.layoutStrategy.apply(this.nodes, this.edges);
+      }
+
       this.nodes.forEach((node) => {
-        const velX = node.vx / node.mass;
-        const velY = node.vy / node.mass;
+        const velX = (node.vx / node.mass) * damping;
+        const velY = (node.vy / node.mass) * damping;
 
         node.position.x += velX;
         node.position.y += velY;
+
+        node.vx *= damping;
+        node.vy *= damping;
       });
+
       this.updateEdges();
 
-      if (this.nodes.every((node) => node.vx > -10 && node.vy > -10))
-        this.animate = false;
+      const allStable = this.nodes.every((node) => {
+        const speed = Math.sqrt(node.vx ** 2 + node.vy ** 2);
+        return speed < velocityThreshold;
+      });
 
-      requestAnimationFrame(loop);
+      if (allStable || frameCount > maxFrames) {
+        this.animate = false;
+      } else {
+        requestAnimationFrame(loop);
+      }
     };
 
-    layout();
     requestAnimationFrame(loop);
   }
 }
