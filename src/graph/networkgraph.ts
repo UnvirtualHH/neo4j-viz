@@ -3,14 +3,14 @@ import { Data } from "../types/graphdata";
 import Edge, { EdgeProperties } from "./edge";
 import Node, { NodeId, NodeProperties } from "./node";
 import { LayoutStrategy } from "./layout/layoutstrategy";
-import { ForceGraphLayout } from "./layout/forcelayout";
+import { EulerGraphLayout } from "./layout/eulerlayout";
 
 class NetworkGraph extends Container {
   private nodes: Node[] = [];
   private edges: Edge<Data>[] = [];
 
   private animate = false;
-  private layoutStrategy: LayoutStrategy = new ForceGraphLayout();
+  private layoutStrategy: LayoutStrategy = new EulerGraphLayout();
 
   constructor() {
     super();

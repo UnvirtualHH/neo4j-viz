@@ -22,12 +22,16 @@ import debounce from "../utils/debounce";
 import PropertiesDialog from "./graph/PropertiesDialog";
 import Search from "./search/Search";
 import ZoomControl from "./graph/ZoomControl";
+import { ForceGraphLayout } from "../graph/layout/forcelayout";
+import { EulerGraphLayout } from "../graph/layout/eulerlayout";
+import LayoutSwitcher, { LayoutType } from "./graph/LayoutSwitcher";
 
 type GraphProps = {
   data: GraphRow[];
 };
 
 const Graph: Component<GraphProps> = (props) => {
+  const [selectedLayout, setSelectedLayout] = createSignal<LayoutType>("force");
   const [viewportReady, setViewportReady] = createSignal(false);
   const [matchCount, setMatchCount] = createSignal(0);
   const [zoomLevel, setZoomLevel] = createSignal(1);
@@ -275,6 +279,13 @@ const Graph: Component<GraphProps> = (props) => {
 
     graph?.destroy?.();
     graph = new NetworkGraph();
+
+    if (selectedLayout() === "force") {
+      graph.setLayoutStrategy(new ForceGraphLayout());
+    } else if (selectedLayout() === "euler") {
+      graph.setLayoutStrategy(new EulerGraphLayout());
+    }
+
     const nodeMap = new Map<string, Node>();
 
     for (const { sourceNode, relation, targetNode } of props.data) {
@@ -449,6 +460,14 @@ const Graph: Component<GraphProps> = (props) => {
       <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />
 
       <Show when={viewportReady()}>
+        <LayoutSwitcher
+          selected={selectedLayout()}
+          onSelectLayout={(layout) => {
+            setSelectedLayout(layout);
+            buildGraphFromData();
+          }}
+        />
+
         <ZoomControl
           zoomLevel={zoomLevel}
           minZoom={minZoom}
