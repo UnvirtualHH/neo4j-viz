@@ -11,7 +11,7 @@ import "./CypherEditor.css";
 import { getFullSchema, runCypherQuery } from "../../service/cypher";
 import { DbSchema } from "@neo4j-cypher/language-support";
 import { isConnected } from "../../store/connection";
-import { Circle, Timer, Workflow, Search, GitBranch } from "lucide-solid";
+import { Circle, Timer, Workflow } from "lucide-solid";
 import FloatingDialog from "../dialog/FloatingDialog";
 import { autoDockPosition } from "../dialog/autoDockPosition";
 
@@ -208,14 +208,13 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
       onClose={() => setMinimized(true)}
     >
       <div class="editor-container relative">
-        {/* Quick Query Buttons */}
         <div class="quick-query-buttons absolute top-2 right-2 flex gap-2 z-10">
           <button
             class="icon-btn"
             title="Alle Knoten anzeigen"
             onClick={() => insertQuickQuery("MATCH (n) RETURN n;")}
           >
-            <Search size={16} />
+            <Circle size={14} />
           </button>
           <button
             class="icon-btn"
@@ -224,7 +223,7 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
               insertQuickQuery("MATCH (n)-[r]-(m) RETURN n, r, m;")
             }
           >
-            <GitBranch size={16} />
+            <Workflow size={14} />
           </button>
         </div>
 

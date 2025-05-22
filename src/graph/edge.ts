@@ -53,13 +53,11 @@ class Edge<T extends Data = Data> extends Graphics {
     this.eventMode = "static";
     this.cursor = "pointer";
 
-    const start = this.startNode.getCenter();
-    const end = this.endNode.getCenter();
-    this.hitArea = new Circle((start.x + end.x) / 2, (start.y + end.y) / 2, 10);
-
     this.on("pointertap", (event) => {
       this.onClick?.(event);
     });
+
+    this.drawHitbox();
 
     this.drawEdge();
   }
@@ -165,6 +163,13 @@ class Edge<T extends Data = Data> extends Graphics {
     this.drawLine();
     this.drawTip();
     this.drawText();
+    this.drawHitbox();
+  }
+
+  drawHitbox() {
+    const start = this.startNode.getCenter();
+    const end = this.endNode.getCenter();
+    this.hitArea = new Circle((start.x + end.x) / 2, (start.y + end.y) / 2, 10);
   }
 
   updatePosition() {
