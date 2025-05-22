@@ -11,7 +11,7 @@ import "./CypherEditor.css";
 import { getFullSchema, runCypherQuery } from "../../service/cypher";
 import { DbSchema } from "@neo4j-cypher/language-support";
 import { isConnected } from "../../store/connection";
-import { Circle, Timer, Workflow } from "lucide-solid";
+import { Circle, Timer, Workflow, Search, GitBranch } from "lucide-solid";
 import FloatingDialog from "../dialog/FloatingDialog";
 import { autoDockPosition } from "../dialog/autoDockPosition";
 
@@ -99,6 +99,12 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     syncHighlight();
   };
 
+  const insertQuickQuery = (query: string) => {
+    inputRef.value = query;
+    syncHighlight();
+    executeQuery();
+  };
+
   const handleKeyDown = (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
@@ -174,12 +180,10 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     }
   });
 
-  onMount(async () => {
+  onMount(() => {
     syncHighlight();
-
     const defaultWidth = 600;
     const padding = 20;
-
     setPosition({
       x: window.innerWidth - defaultWidth - padding,
       y: 20,
@@ -203,7 +207,27 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
       trayable={true}
       onClose={() => setMinimized(true)}
     >
-      <div class="editor-container">
+      <div class="editor-container relative">
+        {/* Quick Query Buttons */}
+        <div class="quick-query-buttons absolute top-2 right-2 flex gap-2 z-10">
+          <button
+            class="icon-btn"
+            title="Alle Knoten anzeigen"
+            onClick={() => insertQuickQuery("MATCH (n) RETURN n;")}
+          >
+            <Search size={16} />
+          </button>
+          <button
+            class="icon-btn"
+            title="Alle Verbindungen anzeigen"
+            onClick={() =>
+              insertQuickQuery("MATCH (n)-[r]-(m) RETURN n, r, m;")
+            }
+          >
+            <GitBranch size={16} />
+          </button>
+        </div>
+
         {autocomplete()?.suggestions()!.length! > 0 && (
           <div class="autocomplete-box" ref={autocompleteRef}>
             {autocomplete()
