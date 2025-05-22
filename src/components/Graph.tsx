@@ -3,6 +3,7 @@ import {
   Application,
   Container,
   FederatedPointerEvent,
+  Graphics,
   PointData,
 } from "pixi.js";
 import {
@@ -20,13 +21,16 @@ import { GraphRow, Neo4jId } from "../types/graphdata";
 import debounce from "../utils/debounce";
 import PropertiesDialog from "./graph/PropertiesDialog";
 import Search from "./search/Search";
+import ZoomControl from "./graph/ZoomControl";
 
 type GraphProps = {
   data: GraphRow[];
 };
 
 const Graph: Component<GraphProps> = (props) => {
+  const [viewportReady, setViewportReady] = createSignal(false);
   const [matchCount, setMatchCount] = createSignal(0);
+  const [zoomLevel, setZoomLevel] = createSignal(1);
   let canvasRef!: HTMLCanvasElement;
   const pixiApp = new Application();
   let viewport: Viewport;
@@ -36,6 +40,16 @@ const Graph: Component<GraphProps> = (props) => {
 
   let isViewportDragging = false;
   let lastPointerPosition: { x: number; y: number } | null = null;
+
+  let minimapContainer: Container;
+  let minimapOverlay: Graphics;
+  let minimapViewFrame: Graphics;
+
+  const minZoom = 0.1;
+  const maxZoom = 10;
+
+  const minimapPadding = 10;
+  const minimapSize = 200;
 
   const [inspectedProps, setInspectedProps] = createSignal<{
     data: Record<string, any>;
@@ -92,7 +106,125 @@ const Graph: Component<GraphProps> = (props) => {
     window.addEventListener("pointerup", onDragEnd);
     window.addEventListener("pointercancel", onDragEnd);
     window.addEventListener("resize", resizeHandler);
+
+    viewport.on("zoomed", () => {
+      const zoom = viewport.scale.x;
+      setZoomLevel(parseFloat(zoom.toFixed(2)));
+    });
+
+    setViewportReady(true);
+
+    minimapContainer = new Container();
+    minimapOverlay = new Graphics();
+    minimapViewFrame = new Graphics();
+
+    minimapOverlay.eventMode = "static";
+    minimapOverlay.cursor = "pointer";
+
+    minimapContainer.addChild(minimapOverlay);
+    minimapContainer.addChild(minimapViewFrame);
+
+    pixiApp.stage.addChild(minimapContainer);
+
+    minimapOverlay.on("pointerdown", (event) => {
+      const local = event.getLocalPosition(minimapOverlay);
+      const bounds = getGraphBounds();
+      if (!bounds) return;
+
+      const scale = getMinimapScale(bounds);
+      const targetX = bounds.minX + (local.x / minimapSize) * bounds.width;
+      const targetY = bounds.minY + (local.y / minimapSize) * bounds.height;
+
+      viewport.moveCenter(targetX, targetY);
+    });
   };
+
+  function drawMinimap() {
+    if (!graph) return;
+
+    const nodes = graph.getNodes();
+    if (nodes.length === 0) return;
+
+    const xs = nodes.map((n) => n.position.x);
+    const ys = nodes.map((n) => n.position.y);
+    let minX = Math.min(...xs);
+    let maxX = Math.max(...xs);
+    let minY = Math.min(...ys);
+    let maxY = Math.max(...ys);
+
+    const paddingFactor = 0.1;
+    const width = maxX - minX || 1;
+    const height = maxY - minY || 1;
+
+    minX -= width * paddingFactor;
+    maxX += width * paddingFactor;
+    minY -= height * paddingFactor;
+    maxY += height * paddingFactor;
+
+    const graphWidth = maxX - minX || 1;
+    const graphHeight = maxY - minY || 1;
+
+    const screenHeight = pixiApp.screen.height;
+    minimapContainer.position.set(
+      minimapPadding,
+      screenHeight - minimapSize - minimapPadding
+    );
+
+    const scaleX = minimapSize / graphWidth;
+    const scaleY = minimapSize / graphHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    const drawWidth = graphWidth * scale;
+    const drawHeight = graphHeight * scale;
+    const offsetX = (minimapSize - drawWidth) / 2;
+    const offsetY = (minimapSize - drawHeight) / 2;
+
+    minimapOverlay.clear();
+    minimapOverlay.beginFill(0x1e1e1e, 0.8);
+    minimapOverlay.drawRoundedRect(0, 0, minimapSize, minimapSize, 8);
+    minimapOverlay.endFill();
+
+    minimapOverlay.beginFill(0x3fa9f5);
+    for (const node of nodes) {
+      const x = (node.position.x - minX) * scale + offsetX;
+      const y = (node.position.y - minY) * scale + offsetY;
+      minimapOverlay.drawCircle(x, y, 2);
+    }
+    minimapOverlay.endFill();
+
+    const view = viewport.getVisibleBounds();
+    const vx = (view.x - minX) * scale + offsetX;
+    const vy = (view.y - minY) * scale + offsetY;
+    const vw = view.width * scale;
+    const vh = view.height * scale;
+
+    minimapViewFrame.clear();
+    minimapViewFrame.lineStyle(1, 0xffffff, 1);
+    minimapViewFrame.drawRect(vx, vy, vw, vh);
+  }
+
+  function getGraphBounds() {
+    const nodes = graph.getNodes();
+    if (nodes.length === 0) return null;
+
+    const xs = nodes.map((n) => n.position.x);
+    const ys = nodes.map((n) => n.position.y);
+
+    return {
+      minX: Math.min(...xs),
+      maxX: Math.max(...xs),
+      minY: Math.min(...ys),
+      maxY: Math.max(...ys),
+      width: Math.max(...xs) - Math.min(...xs),
+      height: Math.max(...ys) - Math.min(...ys),
+    };
+  }
+
+  function getMinimapScale(bounds: { width: number; height: number }) {
+    const scaleX = minimapSize / bounds.width;
+    const scaleY = minimapSize / bounds.height;
+    return Math.min(scaleX, scaleY);
+  }
 
   const onDragMove = (event: PointerEvent) => {
     if (!dragTarget) return;
@@ -232,6 +364,12 @@ const Graph: Component<GraphProps> = (props) => {
     viewport.addChild(graph);
 
     graph.startSimulation();
+
+    viewport.on("moved", drawMinimap);
+    viewport.on("zoomed", drawMinimap);
+    viewport.on("frame-end", drawMinimap);
+
+    drawMinimap();
   };
 
   onMount(initPixi);
@@ -282,10 +420,43 @@ const Graph: Component<GraphProps> = (props) => {
     setMatchCount(count);
   };
 
+  function setZoomTo(scale: number) {
+    if (!viewportReady()) return;
+
+    const screenCenter = {
+      x: viewport.screenWidth / 2,
+      y: viewport.screenHeight / 2,
+    };
+
+    const worldCenterBefore = viewport.toWorld(screenCenter.x, screenCenter.y);
+
+    viewport.scale.set(scale);
+
+    const worldCenterAfter = viewport.toWorld(screenCenter.x, screenCenter.y);
+
+    const dx = worldCenterAfter.x - worldCenterBefore.x;
+    const dy = worldCenterAfter.y - worldCenterBefore.y;
+
+    viewport.x += dx * viewport.scale.x;
+    viewport.y += dy * viewport.scale.y;
+
+    setZoomLevel(scale);
+  }
+
   return (
     <>
       <Search onSearch={handleSearch} matchCount={matchCount()} />
       <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />
+
+      <Show when={viewportReady()}>
+        <ZoomControl
+          zoomLevel={zoomLevel}
+          minZoom={minZoom}
+          maxZoom={maxZoom}
+          onZoomChange={(z) => setZoomTo(z)}
+        />
+      </Show>
+
       <Show when={inspectedProps()} keyed>
         {(inspected) => (
           <PropertiesDialog
