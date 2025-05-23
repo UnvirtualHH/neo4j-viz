@@ -3,7 +3,10 @@ import { Data } from "../types/graphdata";
 import { getMidPoint, getOffsetPoint, getUnitVector } from "../utils/vector";
 import Node from "./node";
 
+type EdgeId = string | number;
+
 type EdgeProperties<T extends Data> = {
+  id: EdgeId;
   startNode: Node;
   endNode: Node;
   color: number;
@@ -14,6 +17,7 @@ type EdgeProperties<T extends Data> = {
 };
 
 class Edge<T extends Data = Data> extends Graphics {
+  id: EdgeId;
   startNode: Node;
   endNode: Node;
   color: number;
@@ -31,7 +35,7 @@ class Edge<T extends Data = Data> extends Graphics {
 
   constructor(properties: EdgeProperties<T>) {
     super();
-
+    this.id = properties.id;
     this.startNode = properties.startNode;
     this.endNode = properties.endNode;
     this.color = properties.color;

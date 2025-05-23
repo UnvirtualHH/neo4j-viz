@@ -144,9 +144,7 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     }
   };
 
-  const executeQuery = async () => {
-    addQueryToHistory(inputRef.value);
-
+  const executeQuery = async () => { 
     setLoading(true);
     setError(null);
 

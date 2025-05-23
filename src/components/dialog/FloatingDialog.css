@@ -39,6 +39,7 @@
   max-height: 80vh;
   overflow-y: auto;
   padding: 1rem;
+  padding-bottom: 4.5rem;
   transition: opacity 200ms ease, max-height 200ms ease, padding 200ms ease;
 }
 

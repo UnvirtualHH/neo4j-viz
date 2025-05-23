@@ -1,4 +1,5 @@
 import { driverInstance } from "../store/connection";
+import { addQueryToHistory } from "../store/history";
 import {
   CypherQueryResult,
   GraphRow,
@@ -13,6 +14,9 @@ export async function runCypherQuery(
 ): Promise<CypherQueryResult> {
   const currentDriver = driverInstance();
   if (!currentDriver) throw new Error("Keine Verbindung zur Datenbank");
+
+  const interpolated = interpolateQuery(query, parameters);
+  addQueryToHistory(interpolated);
 
   const session = currentDriver.session();
   try {
@@ -124,4 +128,32 @@ export async function updateNodeProperties(
   const params = { elementId, ...props };
 
   return runCypherQuery(query, params);
+}
+
+export async function deleteByElementId(
+  type: "node" | "relationship" | undefined,
+  elementId: string
+) {
+  if (type === undefined) {
+    throw new Error("Element type is undefined");
+  }
+  const query =
+    type === "node"
+      ? `MATCH (n) WHERE elementId(n) = $id DETACH DELETE n`
+      : `MATCH ()-[r]-() WHERE elementId(r) = $id DELETE r`;
+  await runCypherQuery(query, { id: elementId });
+}
+
+// just for internal query logging
+function interpolateQuery(query: string, params: Record<string, any>): string {
+  return query.replace(/\$([a-zA-Z0-9_]+)/g, (_, key) => {
+    const value = params[key];
+    if (value === undefined) return `$${key}`;
+
+    if (typeof value === "string") return `"${value}"`;
+    if (typeof value === "number" || typeof value === "boolean")
+      return String(value);
+
+    return JSON.stringify(value);
+  });
 }

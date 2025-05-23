@@ -10,6 +10,8 @@ import { autoDockPosition } from "../dialog/autoDockPosition";
 import { Neo4jId } from "../../types/graphdata";
 import EditableProp from "./EditableProp";
 import { ClipboardCopy } from "lucide-solid";
+import ConfirmDialog from "../dialog/ConfirmDialog";
+import { deleteByElementId } from "../../service/cypher";
 
 type PropertiesDialogProps = {
   data: Record<string, any>;
@@ -23,6 +25,7 @@ type PropertiesDialogProps = {
 
 const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
   const [localData, setLocalData] = createSignal({ ...props.data });
+  const [showConfirm, setShowConfirm] = createSignal(false);
   let lastExternalData = props.data;
 
   createEffect(() => {
@@ -141,8 +144,16 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
             </For>
           </Show>
         </ul>
+      </div>
+      <div class="fixed bottom-0 left-0 right-0 p-2 border-t bg-white flex justify-between items-center">
+        <button
+          class="px-3 py-1 text-sm rounded bg-red-100 text-red-700 hover:bg-red-200"
+          onClick={() => setShowConfirm(true)}
+        >
+          Löschen
+        </button>
 
-        <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-200">
+        <div class="flex gap-2">
           <button
             class="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200"
             onClick={() => setLocalData({ ...props.data })}
@@ -157,6 +168,23 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
           </button>
         </div>
       </div>
+
+      <Show when={showConfirm()}>
+        <ConfirmDialog
+          message="Willst du dieses Element wirklich löschen?"
+          onCancel={() => setShowConfirm(false)}
+          onConfirm={async () => {
+            try {
+              await deleteByElementId(props.type, props.elementId!);
+              console.log("Löschen ausgelöst");
+              setShowConfirm(false);
+            } catch (err) {
+              console.error("Fehler beim Löschen:", err);
+              alert("Löschen fehlgeschlagen");
+            }
+          }}
+        />
+      </Show>
     </FloatingDialog>
   );
 };
