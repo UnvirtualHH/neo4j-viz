@@ -368,7 +368,11 @@ const Graph: Component<GraphProps> = (props) => {
           nodeMap.set(targetId, node);
         }
 
+        const relationId =
+          relation.elementId ?? relation.identity.low.toString();
+
         graph.addEdge({
+          id: relationId,
           startId: sourceId,
           endId: targetId,
           color: 0xdddddd,

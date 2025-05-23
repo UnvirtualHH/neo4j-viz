@@ -18,8 +18,10 @@ export type Neo4jNode = {
 };
 
 export type Neo4jRelationship = {
+  identity: Neo4jId;
   type: string;
   properties: Record<string, any>;
+  elementId: string;
 };
 
 export type GraphRow = {
