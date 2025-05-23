@@ -199,7 +199,7 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     <FloatingDialog
       title="Cypher Editor"
       initialPosition={autoDockPosition("top-right", { width: 600 })}
-      initialSize={{ width: 600, height: 380 }}
+      initialSize={{ width: 600, height: 300 }}
       closable={false}
       minimizable={true}
       draggable={true}
@@ -263,31 +263,37 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
         >
           {loading() ? "Running..." : "Execute Query"}
         </button>
+
+        <div class="editor-status">
+          {queryTime() !== null && (
+            <div title="Ausführungszeit">
+              <div class="flex items-center gap-1">
+                <Timer size={12} strokeWidth={1.0} />
+                <span>{queryTime()!.toFixed(1)} ms</span>
+              </div>
+            </div>
+          )}
+          {nodeCount() !== null && (
+            <div title="Knoten">
+              <div class="flex items-center gap-1">
+                <Circle size={12} strokeWidth={1.0} />
+                <span>{nodeCount()} Nodes</span>
+              </div>
+            </div>
+          )}
+          {relCount() !== null && (
+            <div title="Beziehungen">
+              <div class="flex items-center gap-1">
+                <Workflow size={12} strokeWidth={1.0} />
+                <span>{relCount()} Relations</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div class="editor-info flex flex-col gap-1 mt-2">
         {error() && <div class="error-message">{error()}</div>}
-
-        {queryTime() !== null && (
-          <div class="text-sm text-gray-500 flex items-center gap-3">
-            <div class="flex items-center gap-1">
-              <Timer size={16} strokeWidth={1.5} />
-              <span>{queryTime()!.toFixed(1)} ms</span>
-            </div>
-            {nodeCount() !== null && (
-              <div class="flex items-center gap-1">
-                <Circle size={16} strokeWidth={1.5} />
-                <span>{nodeCount()} Nodes</span>
-              </div>
-            )}
-            {relCount() !== null && (
-              <div class="flex items-center gap-1">
-                <Workflow size={16} strokeWidth={1.5} />
-                <span>{relCount()} Relations</span>
-              </div>
-            )}
-          </div>
-        )}
 
         {Object.keys(labelStats()).length > 0 && (
           <div class="text-sm text-gray-600 flex flex-wrap gap-4">

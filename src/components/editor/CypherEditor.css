@@ -3,7 +3,7 @@
   position: relative;
   display: flex;
   width: 100%;
-  height: 200px;
+  height: 160px;
   font-family: monospace;
   border: 1px solid #ccc;
   background: white;
@@ -46,6 +46,22 @@
   border: none;
   resize: none;
   z-index: 4;
+}
+
+.editor-status {
+  position: absolute;
+  bottom: 0.4em;
+  left: 44px;
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  gap: 1.5em;
+  z-index: 6;
+  pointer-events: none;
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
 }
 
 .highlight-layer {
