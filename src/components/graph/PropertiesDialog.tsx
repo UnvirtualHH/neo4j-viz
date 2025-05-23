@@ -9,6 +9,7 @@ import FloatingDialog from "../dialog/FloatingDialog";
 import { autoDockPosition } from "../dialog/autoDockPosition";
 import { Neo4jId } from "../../types/graphdata";
 import EditableProp from "./EditableProp";
+import { ClipboardCopy } from "lucide-solid";
 
 type PropertiesDialogProps = {
   data: Record<string, any>;
@@ -54,8 +55,8 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
   return (
     <FloatingDialog
       title={props.title || (props.type === "node" ? "Node" : "Relation")}
-      initialPosition={autoDockPosition("top-left", { width: 400 })}
-      initialSize={{ width: 450, height: 360 }}
+      initialPosition={autoDockPosition("top-left", { width: 490 })}
+      initialSize={{ width: 490, height: 400 }}
       draggable
       resizable
       closable
@@ -65,20 +66,50 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
       <div class="overflow-y-auto text-sm text-gray-800 space-y-2 px-2 pb-2">
         <ul class="space-y-1">
           <Show when={props.elementId}>
-            <li class="flex justify-between gap-2 border-b border-gray-200 pb-1">
+            <li class="flex justify-between gap-2 border-b border-gray-200 pb-1 group">
               <span class="font-mono text-gray-500">&lt;elementId&gt;</span>
-              <span class="truncate text-right font-mono text-gray-700">
-                {props.elementId}
-              </span>
+              <div class="flex items-center gap-1">
+                <span class="truncate text-right font-mono text-gray-700">
+                  {props.elementId}
+                </span>
+                <button
+                  class="opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() =>
+                    navigator.clipboard.writeText(props.elementId!)
+                  }
+                  title="Kopieren"
+                >
+                  <ClipboardCopy
+                    size={14}
+                    class="text-gray-400 hover:text-black"
+                  />
+                </button>
+              </div>
             </li>
           </Show>
 
           <Show when={props.identity}>
-            <li class="flex justify-between gap-2 border-b border-gray-200 pb-1">
+            <li class="flex justify-between gap-2 border-b border-gray-200 pb-1 group">
               <span class="font-mono text-gray-500">&lt;id&gt;</span>
-              <span class="truncate text-right font-mono text-gray-700">
-                {props.identity?.low}
-              </span>
+              <div class="flex items-center gap-1">
+                <span class="truncate text-right font-mono text-gray-700">
+                  {props.identity?.low}
+                </span>
+                <button
+                  class="opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() =>
+                    navigator.clipboard.writeText(
+                      props.identity!.low?.toString()
+                    )
+                  }
+                  title="Kopieren"
+                >
+                  <ClipboardCopy
+                    size={14}
+                    class="text-gray-400 hover:text-black"
+                  />
+                </button>
+              </div>
             </li>
           </Show>
 
