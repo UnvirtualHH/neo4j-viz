@@ -1,4 +1,3 @@
-// src/components/schema/QueryHistory.tsx
 import { For, onCleanup, onMount } from "solid-js";
 import { queryHistory } from "../../../store/history";
 import { Clock } from "lucide-solid";

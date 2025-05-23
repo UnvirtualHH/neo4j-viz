@@ -37,4 +37,7 @@ export type CypherQueryResult = {
   executionTimeMs: number;
   labelStats: LabelStats;
   relTypeStats: RelationshipTypeStats;
+
+  columns?: PropertyKey[];
+  tableRows?: Record<string, any>[];
 };

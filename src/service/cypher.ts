@@ -1,13 +1,8 @@
 import { driverInstance } from "../store/connection";
 import { addQueryToHistory } from "../store/history";
-import {
-  CypherQueryResult,
-  GraphRow,
-  Neo4jNode,
-  Neo4jRelationship,
-} from "../types/graphdata";
+import { CypherQueryResult, GraphRow } from "../types/graphdata";
 import { DbSchema } from "../types/schema";
-
+import neo4j from "neo4j-driver";
 export async function runCypherQuery(
   query: string,
   parameters: Record<string, any> = {}
@@ -28,23 +23,54 @@ export async function runCypherQuery(
     const labelCounter = new Map<string, number>();
     const relTypeCounter = new Map<string, number>();
 
-    function countLabels(node?: Neo4jNode) {
-      if (!node) return;
+    const columns = result.records[0]?.keys ?? [];
+    const tableRows = result.records.map((record) => {
+      const row: Record<string, any> = {};
+
+      for (const key of record.keys) {
+        const value = record.get(key);
+
+        if (
+          value === null ||
+          typeof value === "string" ||
+          typeof value === "boolean"
+        ) {
+          row[key as string] = value;
+        } else if (typeof value === "number") {
+          row[key as string] = value;
+        } else if (neo4j.isInt(value)) {
+          row[key as string] = value.toNumber();
+        } else if (typeof value === "object") {
+          row[key as string] = value;
+        } else {
+          row[key as string] = String(value);
+        }
+      }
+      return row;
+    });
+
+    function countLabels(node: any) {
+      if (!node || typeof node !== "object") return;
+      if (!Array.isArray(node.labels)) return;
+
       for (const label of node.labels) {
         labelCounter.set(label, (labelCounter.get(label) ?? 0) + 1);
       }
     }
 
-    function countRelType(r?: Neo4jRelationship) {
-      if (!r?.type) return;
+    function countRelType(r: any) {
+      if (!r || typeof r !== "object") return;
+      if (typeof r.type !== "string") return;
+
       relTypeCounter.set(r.type, (relTypeCounter.get(r.type) ?? 0) + 1);
     }
 
     const data: GraphRow[] = result.records.map((record) => {
-      
-      const sourceNode = record.length > 0 ? record.get(0) : undefined;
-      const relation = record.length > 1 ? record.get(1) : undefined;
-      const targetNode = record.length > 2 ? record.get(2) : undefined;
+      const keys = record.keys;
+
+      const sourceNode = keys.length > 0 ? record.get(keys[0]) : undefined;
+      const relation = keys.length > 1 ? record.get(keys[1]) : undefined;
+      const targetNode = keys.length > 2 ? record.get(keys[2]) : undefined;
 
       if (sourceNode?.elementId) nodeSet.add(sourceNode.elementId);
       if (targetNode?.elementId) nodeSet.add(targetNode.elementId);
@@ -70,6 +96,17 @@ export async function runCypherQuery(
     const executionTimeMs =
       (availableAfter?.toNumber?.() ?? 0) + (consumedAfter?.toNumber?.() ?? 0);
 
+    console.log(data);
+    console.log("Execution time:", executionTimeMs, "ms");
+    console.log("Node count:", nodeCount);
+    console.log("Relationship count:", relationshipCount);
+    console.log("Label stats:", Object.fromEntries(labelCounter));
+    console.log("Relationship type stats:", Object.fromEntries(relTypeCounter));
+    console.log("Columns:", columns);
+    console.log("Table rows:", tableRows);
+    console.log("Query:", query);
+    console.log("Parameters:", parameters);
+
     return {
       data,
       executionTimeMs,
@@ -77,6 +114,8 @@ export async function runCypherQuery(
       relationshipCount,
       labelStats: Object.fromEntries(labelCounter),
       relTypeStats: Object.fromEntries(relTypeCounter),
+      columns,
+      tableRows,
     };
   } finally {
     await session.close();

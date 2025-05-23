@@ -1,13 +1,17 @@
-import { createSignal, type Component } from "solid-js";
+import { createSignal, Show, type Component } from "solid-js";
 import Graph from "./components/Graph";
 import CypherEditor from "./components/editor/CypherEditor";
 import BottomNav from "./components/layout/BottomNav";
 
 import { onMount } from "solid-js";
 import { restoreNeo4jConnection } from "./store/connection";
+import QueryResultDialog from "./components/layout/items/QueryResults";
 
 const App: Component = () => {
   const [graphData, setGraphData] = createSignal<any[]>([]);
+  const [queryResultData, setQueryResultData] = createSignal<any[]>([]);
+  const [queryColumns, setQueryColumns] = createSignal<PropertyKey[]>([]);
+  const [showQueryResult, setShowQueryResult] = createSignal(false);
 
   onMount(() => {
     restoreNeo4jConnection();
@@ -16,7 +20,26 @@ const App: Component = () => {
   return (
     <div class="relative w-screen h-screen overflow-hidden">
       <Graph data={graphData()} />
-      <CypherEditor onQueryResult={setGraphData} />
+      <CypherEditor
+        onQueryResult={(result) => {
+          setGraphData(result.data);
+
+          if (result.tableRows?.length && result.columns?.length) {
+            setQueryResultData(result.tableRows);
+            setQueryColumns(result.columns);
+            setShowQueryResult(true);
+          } else {
+            setShowQueryResult(false);
+          }
+        }}
+      />
+      <Show when={showQueryResult()}>
+        <QueryResultDialog
+          data={queryResultData()}
+          columns={queryColumns()}
+          onClose={() => setShowQueryResult(false)}
+        />
+      </Show>
       <BottomNav />
     </div>
   );

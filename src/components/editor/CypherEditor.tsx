@@ -14,11 +14,11 @@ import { Circle, Timer, Workflow } from "lucide-solid";
 import FloatingDialog from "../dialog/FloatingDialog";
 import { autoDockPosition } from "../dialog/autoDockPosition";
 import { DbSchema } from "../../types/schema";
-import { addQueryToHistory } from "../../store/history";
 import { editorQuery } from "../../store/query";
+import { CypherQueryResult } from "../../types/graphdata";
 
 type CypherEditorProps = {
-  onQueryResult: (data: any[]) => void;
+  onQueryResult: (result: CypherQueryResult) => void;
 };
 
 const CypherEditor: Component<CypherEditorProps> = (props) => {
@@ -44,8 +44,6 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
 
   const [minimized, setMinimized] = createSignal(false);
   const [position, setPosition] = createSignal({ x: 0, y: 20 });
-  let dragOffset = { x: 0, y: 0 };
-  let dragging = false;
 
   createEffect(() => {
     if (schema()) {
@@ -144,25 +142,18 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     }
   };
 
-  const executeQuery = async () => { 
+  const executeQuery = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const {
-        data,
-        executionTimeMs,
-        nodeCount,
-        relationshipCount,
-        labelStats,
-        relTypeStats,
-      } = await runCypherQuery(inputRef.value);
-      setQueryTime(executionTimeMs);
-      setNodeCount(nodeCount);
-      setRelCount(relationshipCount);
-      setLabelStats(labelStats);
-      setRelTypeStats(relTypeStats);
-      props.onQueryResult(data);
+      const result = await runCypherQuery(inputRef.value);
+      setQueryTime(result.executionTimeMs);
+      setNodeCount(result.nodeCount);
+      setRelCount(result.relationshipCount);
+      setLabelStats(result.labelStats);
+      setRelTypeStats(result.relTypeStats);
+      props.onQueryResult(result);
     } catch (err: any) {
       setError(err.message || "Unbekannter Fehler");
     } finally {
