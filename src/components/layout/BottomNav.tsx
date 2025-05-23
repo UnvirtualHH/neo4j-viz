@@ -1,12 +1,22 @@
-import { Clock, Database, Home, Settings, Star } from "lucide-solid";
+import {
+  AppWindow,
+  Clock,
+  Database,
+  Home,
+  Server,
+  Settings,
+  Star,
+} from "lucide-solid";
 import { createSignal, Show } from "solid-js";
 import { isConnected } from "../../store/connection";
 import Databases from "./Databases";
 import { removeFromTray, trayDialogs } from "../../store/dialog";
+import SchemaInfo from "./Schema";
 
 const BottomNav = () => {
   const [active, setActive] = createSignal("home");
   const [showDatabases, setShowDatabases] = createSignal(false);
+  const [showSchema, setShowSchema] = createSignal(false);
 
   const navItems = [
     { id: "home", icon: Home, tooltip: "Query" },
@@ -17,6 +27,12 @@ const BottomNav = () => {
       tooltip: "Verbindungen",
       action: () => setShowDatabases(true),
     },
+    {
+      id: "schema",
+      icon: Server,
+      tooltip: "Schema",
+      action: () => setShowSchema(true),
+    },
     { id: "history", icon: Clock, tooltip: "Verlauf" },
     { id: "settings", icon: Settings, tooltip: "Einstellungen" },
   ];
@@ -25,6 +41,10 @@ const BottomNav = () => {
     <>
       <Show when={showDatabases()}>
         <Databases onClose={() => setShowDatabases(false)} />
+      </Show>
+
+      <Show when={showSchema()}>
+        <SchemaInfo onClose={() => setShowSchema(false)} />
       </Show>
 
       <div class="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 bg-white/70 backdrop-blur-md border border-gray-300 rounded-2xl shadow-md px-4 py-1 flex gap-6">
@@ -65,7 +85,7 @@ const BottomNav = () => {
                 title={d.title}
                 class="p-1 text-gray-500 hover:text-blue-600"
               >
-                <Database class="w-5 h-5" />
+                <AppWindow class="w-5 h-5" />
               </button>
             ))}
           </div>

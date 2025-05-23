@@ -9,11 +9,11 @@ import { useCypherAutocomplete } from "./autocomplete";
 import { highlightCypher } from "./highlight";
 import "./CypherEditor.css";
 import { getFullSchema, runCypherQuery } from "../../service/cypher";
-import { DbSchema } from "@neo4j-cypher/language-support";
 import { isConnected } from "../../store/connection";
 import { Circle, Timer, Workflow } from "lucide-solid";
 import FloatingDialog from "../dialog/FloatingDialog";
 import { autoDockPosition } from "../dialog/autoDockPosition";
+import { DbSchema } from "../../types/schema";
 
 type CypherEditorProps = {
   onQueryResult: (data: any[]) => void;

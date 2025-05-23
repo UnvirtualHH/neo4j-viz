@@ -5,6 +5,7 @@ import {
   Neo4jNode,
   Neo4jRelationship,
 } from "../types/graphdata";
+import { DbSchema } from "../types/schema";
 
 export async function runCypherQuery(
   query: string,
@@ -75,7 +76,7 @@ export async function runCypherQuery(
   }
 }
 
-export async function getFullSchema() {
+export async function getFullSchema(): Promise<DbSchema> {
   const currentDriver = driverInstance();
   if (!currentDriver) throw new Error("Keine Verbindung zur Datenbank");
 
