@@ -25,7 +25,7 @@ export type Neo4jRelationship = {
 };
 
 export type GraphRow = {
-  sourceNode: Neo4jNode;
+  sourceNode?: Neo4jNode;
   relation?: Neo4jRelationship;
   targetNode?: Neo4jNode;
 };
@@ -40,4 +40,5 @@ export type CypherQueryResult = {
 
   columns?: PropertyKey[];
   tableRows?: Record<string, any>[];
+  isGraphLike: boolean;
 };

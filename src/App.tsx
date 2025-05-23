@@ -22,11 +22,16 @@ const App: Component = () => {
       <Graph data={graphData()} />
       <CypherEditor
         onQueryResult={(result) => {
-          setGraphData(result.data);
+          // Nur anzeigen, wenn es wirklich Graphdaten gibt
+          if (result.isGraphLike) {
+            setGraphData(result.data);
+          }
 
-          if (result.tableRows?.length && result.columns?.length) {
-            setQueryResultData(result.tableRows);
-            setQueryColumns(result.columns);
+          // Nur anzeigen, wenn tabellarisch
+          const isTabular = result.tableRows?.length && result.columns?.length;
+          if (isTabular && !result.isGraphLike) {
+            setQueryResultData(result.tableRows ?? []);
+            setQueryColumns(result.columns ?? []);
             setShowQueryResult(true);
           } else {
             setShowQueryResult(false);
