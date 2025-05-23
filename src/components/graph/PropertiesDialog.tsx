@@ -9,9 +9,27 @@ import FloatingDialog from "../dialog/FloatingDialog";
 import { autoDockPosition } from "../dialog/autoDockPosition";
 import { Neo4jId } from "../../types/graphdata";
 import EditableProp from "./EditableProp";
-import { ClipboardCopy } from "lucide-solid";
+import { ClipboardCopy, Clock, Divide, Plus, Timer } from "lucide-solid";
 import ConfirmDialog from "../dialog/ConfirmDialog";
 import { deleteByElementId } from "../../service/cypher";
+import { Type, Hash, Check, Calendar } from "lucide-solid";
+
+const neo4jTypes = [
+  { value: "string", icon: <Type size={16} />, title: "Text" },
+  { value: "boolean", icon: <Check size={16} />, title: "Boolean" },
+  { value: "integer", icon: <Hash size={16} />, title: "Integer" },
+  { value: "float", icon: <Divide size={16} />, title: "Float" },
+  { value: "date", icon: <Calendar size={16} />, title: "Datum" },
+  { value: "time", icon: <Clock size={16} />, title: "Zeit" },
+  { value: "localTime", icon: <Clock size={16} />, title: "Zeit (lokal)" },
+  { value: "dateTime", icon: <Clock size={16} />, title: "Zeitstempel" },
+  {
+    value: "localDateTime",
+    icon: <Clock size={16} />,
+    title: "Zeitstempel (lokal)",
+  },
+  { value: "duration", icon: <Timer size={16} />, title: "Dauer" },
+];
 
 type PropertiesDialogProps = {
   data: Record<string, any>;
@@ -27,6 +45,23 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
   const [localData, setLocalData] = createSignal({ ...props.data });
   const [showConfirm, setShowConfirm] = createSignal(false);
   let lastExternalData = props.data;
+  const [showAddProp, setShowAddProp] = createSignal(false);
+  const [newKey, setNewKey] = createSignal("");
+  const [newValue, setNewValue] = createSignal("");
+  const [showTypeDropdown, setShowTypeDropdown] = createSignal(false);
+
+  const [newType, setNewType] = createSignal<
+    | "string"
+    | "boolean"
+    | "integer"
+    | "float"
+    | "date"
+    | "time"
+    | "localTime"
+    | "dateTime"
+    | "localDateTime"
+    | "duration"
+  >("string");
 
   createEffect(() => {
     if (props.data !== lastExternalData) {
@@ -67,6 +102,165 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
       onClose={props.onClose}
     >
       <div class="overflow-y-auto text-sm text-gray-800 space-y-2 px-2 pb-2">
+        <div class="flex justify-between items-center mb-1">
+          <h2 class="text-sm font-semibold text-gray-600">Eigenschaften</h2>
+          <button
+            title="Property hinzufügen"
+            class="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50"
+            onClick={() => setShowAddProp((v) => !v)}
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+        <Show when={showAddProp()}>
+          <div class="flex flex-wrap items-center gap-2 mb-2 text-sm">
+            <input
+              type="text"
+              placeholder="Key"
+              class="border px-2 py-1 rounded w-32"
+              value={newKey()}
+              onInput={(e) => setNewKey(e.currentTarget.value)}
+            />
+
+            <div class="flex gap-1">
+              <div class="relative">
+                <button
+                  class="w-9 h-9 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-100"
+                  onClick={() => setShowTypeDropdown((v) => !v)}
+                  title="Typ wählen"
+                >
+                  {neo4jTypes.find((t) => t.value === newType())?.icon}
+                </button>
+
+                <Show when={showTypeDropdown()}>
+                  <ul class="absolute z-10 mt-1 w-9 bg-white border rounded shadow text-sm">
+                    <For each={neo4jTypes}>
+                      {(t) => (
+                        <li
+                          class="p-2 hover:bg-gray-100 cursor-pointer flex justify-center"
+                          onClick={() => {
+                            setNewType(t.value as any);
+                            setShowTypeDropdown(false);
+                          }}
+                          title={t.title}
+                        >
+                          {t.icon}
+                        </li>
+                      )}
+                    </For>
+                  </ul>
+                </Show>
+              </div>
+            </div>
+
+            <Show when={newType() === "string"}>
+              <input
+                type="text"
+                class="border px-2 py-1 rounded w-40"
+                placeholder="Text"
+                value={newValue()}
+                onInput={(e) => setNewValue(e.currentTarget.value)}
+              />
+            </Show>
+
+            <Show when={newType() === "integer"}>
+              <input
+                type="number"
+                step="1"
+                class="border px-2 py-1 rounded w-40"
+                placeholder="Ganzzahl"
+                value={newValue()}
+                onInput={(e) => setNewValue(e.currentTarget.value)}
+              />
+            </Show>
+
+            <Show when={newType() === "float"}>
+              <input
+                type="number"
+                step="any"
+                class="border px-2 py-1 rounded w-40"
+                placeholder="Kommazahl"
+                value={newValue()}
+                onInput={(e) => setNewValue(e.currentTarget.value)}
+              />
+            </Show>
+
+            <Show when={newType() === "date"}>
+              <input
+                type="date"
+                class="border px-2 py-1 rounded w-40"
+                value={newValue()}
+                onInput={(e) => setNewValue(e.currentTarget.value)}
+              />
+            </Show>
+
+            <Show when={newType() === "time" || newType() === "localTime"}>
+              <input
+                type="time"
+                step="1"
+                class="border px-2 py-1 rounded w-40"
+                value={newValue()}
+                onInput={(e) => setNewValue(e.currentTarget.value)}
+              />
+            </Show>
+
+            <Show
+              when={newType() === "dateTime" || newType() === "localDateTime"}
+            >
+              <input
+                type="datetime-local"
+                class="border px-2 py-1 rounded w-40"
+                value={newValue()}
+                onInput={(e) => setNewValue(e.currentTarget.value)}
+              />
+            </Show>
+
+            <Show when={newType() === "duration"}>
+              <input
+                type="text"
+                class="border px-2 py-1 rounded w-40"
+                placeholder="z. B. P1Y2M3DT4H"
+                value={newValue()}
+                onInput={(e) => setNewValue(e.currentTarget.value)}
+              />
+            </Show>
+
+            <Show when={newType() === "boolean"}>
+              <label class="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={newValue() === "true"}
+                  onChange={(e) =>
+                    setNewValue(e.currentTarget.checked ? "true" : "false")
+                  }
+                />
+                <span>Wahr</span>
+              </label>
+            </Show>
+
+            <button
+              class="px-2 py-1 rounded text-white bg-green-600 hover:bg-green-700"
+              onClick={() => {
+                const key = newKey().trim();
+                if (!key) return;
+
+                if (localData().hasOwnProperty(key)) {
+                  alert("Key existiert bereits.");
+                  return;
+                }
+
+                setLocalData((prev) => ({ ...prev, [key]: newValue() }));
+                setNewKey("");
+                setNewValue("");
+                setNewType("string");
+                setShowAddProp(false);
+              }}
+            >
+              Hinzufügen
+            </button>
+          </div>
+        </Show>
+
         <ul class="space-y-1">
           <Show when={props.elementId}>
             <li class="flex justify-between gap-2 border-b border-gray-200 pb-1 group">

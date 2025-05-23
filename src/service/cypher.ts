@@ -41,9 +41,10 @@ export async function runCypherQuery(
     }
 
     const data: GraphRow[] = result.records.map((record) => {
-      const sourceNode = record.get(0);
-      const relation = record.get(1);
-      const targetNode = record.get(2);
+      
+      const sourceNode = record.length > 0 ? record.get(0) : undefined;
+      const relation = record.length > 1 ? record.get(1) : undefined;
+      const targetNode = record.length > 2 ? record.get(2) : undefined;
 
       if (sourceNode?.elementId) nodeSet.add(sourceNode.elementId);
       if (targetNode?.elementId) nodeSet.add(targetNode.elementId);
