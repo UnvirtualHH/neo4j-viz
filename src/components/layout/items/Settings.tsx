@@ -1,8 +1,11 @@
 import { SettingsIcon } from "lucide-solid";
 import { onCleanup, onMount } from "solid-js";
+import { useSetting } from "../../../store/settings";
 
 const Settings = (props: { onClose: () => void }) => {
   let popupRef: HTMLDivElement | undefined;
+
+  const zoomSetting = useSetting("requireCtrlForZoom");
 
   const handleClickOutside = (event: MouseEvent) => {
     if (popupRef && !popupRef.contains(event.target as Node)) {
@@ -27,6 +30,24 @@ const Settings = (props: { onClose: () => void }) => {
         <SettingsIcon class="w-4 h-4" />
         Settings
       </h3>
+
+      <div class="space-y-4">
+        <section>
+          <h4 class="text-xs font-bold text-gray-500 uppercase mb-1">
+            Interaktionen
+          </h4>
+          <div class="flex items-center justify-between py-1">
+            <label class="flex items-center gap-2 text-gray-700">
+              <input
+                type="checkbox"
+                checked={zoomSetting.get()}
+                onChange={(e) => zoomSetting.set(e.currentTarget.checked)}
+              />
+              Zoom nur mit STRG
+            </label>
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

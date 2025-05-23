@@ -26,6 +26,7 @@ import { ForceGraphLayout } from "../graph/layout/forcelayout";
 import { EulerGraphLayout } from "../graph/layout/eulerlayout";
 import LayoutSwitcher, { LayoutType } from "./graph/LayoutSwitcher";
 import { TreeLayout } from "../graph/layout/treelayout";
+import { useSetting } from "../store/settings";
 
 type GraphProps = {
   data: GraphRow[];
@@ -55,6 +56,8 @@ const Graph: Component<GraphProps> = (props) => {
 
   const minimapPadding = 10;
   const minimapSize = 200;
+
+  const zoomSetting = useSetting("requireCtrlForZoom");
 
   const [inspectedProps, setInspectedProps] = createSignal<{
     data: Record<string, any>;
@@ -86,7 +89,10 @@ const Graph: Component<GraphProps> = (props) => {
     });
 
     canvasRef.addEventListener("wheel", (e) => {
-      if (e.ctrlKey || e.metaKey) {
+      const requireCtrl = zoomSetting.get();
+      const ctrlHeld = e.ctrlKey || e.metaKey;
+
+      if (!requireCtrl || (requireCtrl && ctrlHeld)) {
         e.preventDefault();
 
         const scaleFactor = 1.1;
@@ -438,7 +444,6 @@ const Graph: Component<GraphProps> = (props) => {
         );
       node.setHighlight(match);
       if (match) count++;
-      
     });
 
     graph.getEdges().forEach((edge) => {
