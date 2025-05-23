@@ -97,7 +97,6 @@ class Node extends Graphics {
   }
 
   setHighlight(state: boolean) {
-    console.log("setHighlight", this.label, state);
     this.#highlighted = state;
     this.redraw();
   }

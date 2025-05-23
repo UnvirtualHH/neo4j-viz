@@ -133,7 +133,7 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
                 </button>
 
                 <Show when={showTypeDropdown()}>
-                  <ul class="absolute z-10 mt-1 w-9 bg-white border rounded shadow text-sm">
+                  <ul class="absolute z-[1000] mt-1 w-9 bg-white border rounded shadow text-sm">
                     <For each={neo4jTypes}>
                       {(t) => (
                         <li
@@ -239,7 +239,7 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
             </Show>
 
             <button
-              class="px-2 py-1 rounded text-white bg-green-600 hover:bg-green-700"
+              class="w-8 h-8 flex items-center justify-center rounded bg-green-600 text-white hover:bg-green-700"
               onClick={() => {
                 const key = newKey().trim();
                 if (!key) return;
@@ -255,8 +255,9 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
                 setNewType("string");
                 setShowAddProp(false);
               }}
+              title="Property hinzufügen"
             >
-              Hinzufügen
+              <Plus size={16} />
             </button>
           </div>
         </Show>

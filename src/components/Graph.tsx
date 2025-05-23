@@ -438,9 +438,7 @@ const Graph: Component<GraphProps> = (props) => {
         );
       node.setHighlight(match);
       if (match) count++;
-      if (match) {
-        console.log("Match found in node:", node.label);
-      }
+      
     });
 
     graph.getEdges().forEach((edge) => {

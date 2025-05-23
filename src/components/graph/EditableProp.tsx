@@ -54,7 +54,6 @@ const EditableProp: Component<EditablePropProps> = (props) => {
             </span>
           }
         >
-          {/* Typabhängiges Eingabefeld */}
           <Show when={typeof props.value === "boolean"}>
             <input
               type="checkbox"
