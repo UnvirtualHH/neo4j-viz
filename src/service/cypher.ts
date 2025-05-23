@@ -96,17 +96,6 @@ export async function runCypherQuery(
     const executionTimeMs =
       (availableAfter?.toNumber?.() ?? 0) + (consumedAfter?.toNumber?.() ?? 0);
 
-    console.log(data);
-    console.log("Execution time:", executionTimeMs, "ms");
-    console.log("Node count:", nodeCount);
-    console.log("Relationship count:", relationshipCount);
-    console.log("Label stats:", Object.fromEntries(labelCounter));
-    console.log("Relationship type stats:", Object.fromEntries(relTypeCounter));
-    console.log("Columns:", columns);
-    console.log("Table rows:", tableRows);
-    console.log("Query:", query);
-    console.log("Parameters:", parameters);
-
     return {
       data,
       executionTimeMs,
