@@ -4,8 +4,8 @@ import {
   Database,
   Home,
   Server,
-  Settings,
   Star,
+  SettingsIcon,
 } from "lucide-solid";
 import { createSignal, Show } from "solid-js";
 import { isConnected } from "../../store/connection";
@@ -14,12 +14,14 @@ import { removeFromTray, trayDialogs } from "../../store/dialog";
 import SchemaInfo from "./items/Schema";
 import History from "./items/History";
 import { setEditorQuery } from "../../store/query";
+import Settings from "./items/Settings";
 
 const BottomNav = () => {
   const [active, setActive] = createSignal("home");
   const [showDatabases, setShowDatabases] = createSignal(false);
   const [showSchema, setShowSchema] = createSignal(false);
   const [showHistory, setShowHistory] = createSignal(false);
+  const [showSettings, setShowSettings] = createSignal(false);
 
   const navItems = [
     { id: "home", icon: Home, tooltip: "Query" },
@@ -42,7 +44,12 @@ const BottomNav = () => {
       tooltip: "Verlauf",
       action: () => setShowHistory(true),
     },
-    { id: "settings", icon: Settings, tooltip: "Einstellungen" },
+    {
+      id: "settings",
+      icon: SettingsIcon,
+      tooltip: "Einstellungen",
+      action: () => setShowSettings(true),
+    },
   ];
 
   return (
@@ -63,6 +70,10 @@ const BottomNav = () => {
           }}
           onClose={() => setShowHistory(false)}
         />
+      </Show>
+
+      <Show when={showSettings()}>
+        <Settings onClose={() => setShowSettings(false)} />
       </Show>
 
       <div class="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 bg-white/70 backdrop-blur-md border border-gray-300 rounded-2xl shadow-md px-4 py-1 flex gap-6">
