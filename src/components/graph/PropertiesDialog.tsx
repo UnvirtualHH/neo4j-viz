@@ -176,8 +176,8 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
           onConfirm={async () => {
             try {
               await deleteByElementId(props.type, props.elementId!);
-              console.log("Löschen ausgelöst");
               setShowConfirm(false);
+              props.onClose();
             } catch (err) {
               console.error("Fehler beim Löschen:", err);
               alert("Löschen fehlgeschlagen");

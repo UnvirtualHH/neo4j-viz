@@ -385,8 +385,8 @@ const Graph: Component<GraphProps> = (props) => {
               title: relation.type,
               // title: relation.labels?.join(", ") || "Relationship",
               type: "relationship",
-              elementId: undefined,
-              identity: undefined,
+              elementId: relation.elementId,
+              identity: relation.identity,
             });
           },
         });
