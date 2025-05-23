@@ -66,10 +66,10 @@ const SchemaInfo = (props: { onClose: () => void }) => {
             <div>
               <h4 class="font-semibold text-gray-600 mb-1 flex items-center gap-2">
                 <Tags class="w-4 h-4" />
-                Properties ({s().allProperties?.length})
+                Properties ({s().propertyKeys?.length})
               </h4>
               <ul class="list-disc list-inside space-y-0.5 text-gray-700">
-                <For each={s().allProperties}>{(key) => <li>{key}</li>}</For>
+                <For each={s().propertyKeys}>{(key) => <li>{key}</li>}</For>
               </ul>
             </div>
           </>

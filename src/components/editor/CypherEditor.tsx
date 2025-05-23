@@ -200,6 +200,7 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     if (newQuery && inputRef && inputRef.value !== newQuery) {
       inputRef.value = newQuery;
       inputRef.selectionStart = inputRef.selectionEnd = newQuery.length;
+      executeQuery();
       syncHighlight();
     }
   });
@@ -212,7 +213,7 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     <FloatingDialog
       title="Cypher Editor"
       initialPosition={autoDockPosition("top-right", { width: 600 })}
-      initialSize={{ width: 600, height: 300 }}
+      initialSize={{ width: 600, height: 240 }}
       closable={false}
       minimizable={true}
       draggable={true}
@@ -303,36 +304,6 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
             </div>
           )}
         </div>
-      </div>
-
-      <div class="editor-info flex flex-col gap-1 mt-2">
-        {error() && <div class="error-message">{error()}</div>}
-
-        {Object.keys(labelStats()).length > 0 && (
-          <div class="text-sm text-gray-600 flex flex-wrap gap-4">
-            {Object.entries(labelStats()).map(([label, count]) => (
-              <div class="flex items-center gap-1" title="Knoten mit Label">
-                <Circle size={14} strokeWidth={1.5} />
-                <span>
-                  {label}: {count}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {Object.keys(relTypeStats()).length > 0 && (
-          <div class="text-sm text-gray-600 flex flex-wrap gap-4">
-            {Object.entries(relTypeStats()).map(([type, count]) => (
-              <div class="flex items-center gap-1" title="Beziehungen">
-                <Workflow size={14} strokeWidth={1.5} />
-                <span>
-                  {type}: {count}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </FloatingDialog>
   );

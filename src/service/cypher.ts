@@ -93,7 +93,7 @@ export async function getFullSchema(): Promise<DbSchema> {
       return {
         labels: labelsResult.records.map((r) => r.get(0)),
         relationshipTypes: relsResult.records.map((r) => r.get(0)),
-        allProperties: propsResult.records.map((r) => r.get(0)),
+        propertyKeys: propsResult.records.map((r) => r.get(0)),
       };
     });
 

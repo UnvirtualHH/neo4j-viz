@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 
 const HISTORY_KEY = "cypherQueryHistory";
-const MAX_ENTRIES = 50;
+const MAX_ENTRIES = 20;
 
 function loadFromStorage(): string[] {
   try {
