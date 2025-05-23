@@ -2,12 +2,15 @@ import { FederatedPointerEvent, Graphics, PointData, Text } from "pixi.js";
 import { darkenColor } from "../utils/color";
 
 type NodeId = string | number;
+
 type NodeProperties = {
   id: NodeId;
   position: PointData;
   radius: number;
   color: number;
   label: string;
+  properties?: Record<string, any>;
+  labels?: string[];
   onDragStart?: (event: FederatedPointerEvent) => void;
   onClick?: (event: FederatedPointerEvent) => void;
 };
@@ -18,6 +21,8 @@ class Node extends Graphics {
   color: number;
   margin: number;
   label: string;
+  properties: Record<string, any>;
+  labels: string[];
   vx: number;
   vy: number;
   mass: number;
@@ -26,14 +31,16 @@ class Node extends Graphics {
   #highlighted = false;
   #labelText: Text;
 
-  constructor(properties: NodeProperties) {
+  constructor(props: NodeProperties) {
     super();
-    this.id = properties.id;
-    this.position = properties.position;
-    this.radius = properties.radius;
-    this.color = properties.color;
+    this.id = props.id;
+    this.position.set(props.position.x, props.position.y);
+    this.radius = props.radius;
+    this.color = props.color;
     this.margin = 5;
-    this.label = properties.label || "";
+    this.label = props.label || "";
+    this.properties = props.properties ?? {};
+    this.labels = props.labels ?? [];
     this.vx = 0;
     this.vy = 0;
     this.mass = (2 * Math.PI * this.radius) / 1.5;
@@ -41,22 +48,16 @@ class Node extends Graphics {
     this.eventMode = "static";
     this.cursor = "pointer";
 
-    this.onClick = properties.onClick;
-
-    let pointerDownTime = 0;
-    let pointerDownPos: PointData = { x: 0, y: 0 };
+    this.onClick = props.onClick;
 
     this.on("pointerdown", (event) => {
-      pointerDownTime = performance.now();
-      pointerDownPos = event.global.clone();
-      setTimeout(() => properties.onDragStart?.(event), 0);
+      setTimeout(() => props.onDragStart?.(event), 0);
     });
 
     this.on("pointertap", (event) => {
-      properties.onClick?.(event);
+      props.onClick?.(event);
     });
 
-    // Label vorbereiten (Text-Objekt behalten für redraw)
     this.#labelText = new Text({
       text: this.label,
       style: {
@@ -66,6 +67,7 @@ class Node extends Graphics {
       },
       resolution: 5,
     });
+
     this.#labelText.anchor.set(0.5);
     this.#labelText.x = 0;
     this.#labelText.y = 0;
@@ -75,7 +77,6 @@ class Node extends Graphics {
 
   redraw() {
     this.clear();
-
     const strokeColor = this.#highlighted
       ? 0xffff00
       : darkenColor(this.color, 50);
@@ -96,6 +97,7 @@ class Node extends Graphics {
   }
 
   setHighlight(state: boolean) {
+    console.log("setHighlight", this.label, state);
     this.#highlighted = state;
     this.redraw();
   }
@@ -112,6 +114,8 @@ class Node extends Graphics {
     return {
       label: this.label,
       color: this.color,
+      ...this.properties,
+      labels: this.labels.join(", "),
     };
   }
 }

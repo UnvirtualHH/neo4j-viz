@@ -318,6 +318,8 @@ const Graph: Component<GraphProps> = (props) => {
           radius: 20,
           color: 0x3498db,
           label: sourceNode.properties.name ?? sourceId,
+          labels: sourceNode.labels,
+          properties: sourceNode.properties,
           onDragStart,
           onClick: () => {
             setInspectedProps({
@@ -348,6 +350,8 @@ const Graph: Component<GraphProps> = (props) => {
             radius: 20,
             color: 0xe67e22,
             label: targetNode.properties.name ?? targetId,
+            labels: targetNode.labels,
+            properties: targetNode.properties,
             onDragStart,
             onClick: () => {
               setInspectedProps({
@@ -430,6 +434,9 @@ const Graph: Component<GraphProps> = (props) => {
         );
       node.setHighlight(match);
       if (match) count++;
+      if (match) {
+        console.log("Match found in node:", node.label);
+      }
     });
 
     graph.getEdges().forEach((edge) => {
