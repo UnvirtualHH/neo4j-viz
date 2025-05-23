@@ -14,6 +14,8 @@ import { Circle, Timer, Workflow } from "lucide-solid";
 import FloatingDialog from "../dialog/FloatingDialog";
 import { autoDockPosition } from "../dialog/autoDockPosition";
 import { DbSchema } from "../../types/schema";
+import { addQueryToHistory } from "../../store/history";
+import { editorQuery } from "../../store/query";
 
 type CypherEditorProps = {
   onQueryResult: (data: any[]) => void;
@@ -143,6 +145,8 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
   };
 
   const executeQuery = async () => {
+    addQueryToHistory(inputRef.value);
+
     setLoading(true);
     setError(null);
 
@@ -189,6 +193,15 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
       y: 20,
     });
     document.addEventListener("mousedown", handleClickOutside);
+  });
+
+  createEffect(() => {
+    const newQuery = editorQuery();
+    if (newQuery && inputRef && inputRef.value !== newQuery) {
+      inputRef.value = newQuery;
+      inputRef.selectionStart = inputRef.selectionEnd = newQuery.length;
+      syncHighlight();
+    }
   });
 
   onCleanup(() => {

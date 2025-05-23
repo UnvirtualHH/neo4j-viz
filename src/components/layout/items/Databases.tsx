@@ -13,7 +13,7 @@ import {
   disconnectNeo4j,
   isConnected,
   serverInfo,
-} from "../../store/connection";
+} from "../../../store/connection";
 import { createSignal, onMount, onCleanup, Show } from "solid-js";
 
 const Databases = (props: { onClose: () => void }) => {

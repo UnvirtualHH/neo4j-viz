@@ -1,7 +1,7 @@
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
-import { getFullSchema } from "../../service/cypher";
+import { getFullSchema } from "../../../service/cypher";
 import { BookOpen, Circle, Tags, Workflow } from "lucide-solid";
-import { DbSchema } from "../../types/schema";
+import { DbSchema } from "../../../types/schema";
 
 const SchemaInfo = (props: { onClose: () => void }) => {
   const [schema, setSchema] = createSignal<DbSchema | null>(null);
