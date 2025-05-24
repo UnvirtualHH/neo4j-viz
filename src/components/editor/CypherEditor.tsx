@@ -10,7 +10,7 @@ import { highlightCypher } from "../../utils/editor/highlight";
 import "./CypherEditor.css";
 import { getFullSchema, runCypherQuery } from "../../service/cypher";
 import { isConnected } from "../../store/connection";
-import { Circle, Timer, Workflow } from "lucide-solid";
+import { Circle, Star, Timer, Workflow } from "lucide-solid";
 import FloatingDialog from "../dialog/FloatingDialog";
 import { autoDockPosition } from "../dialog/autoDockPosition";
 import { DbSchema } from "../../types/schema";
@@ -20,6 +20,7 @@ import { CypherQueryResult } from "../../types/graphdata";
 import ErrorBanner from "./ErrorBanner";
 import AutocompleteBox from "./AutocompleteBox";
 import { useSetting } from "../../store/settings";
+import { addQueryToFavorites } from "../../store/favorites";
 
 const CypherEditor: Component<{
   onQueryResult: (result: CypherQueryResult) => void;
@@ -146,6 +147,13 @@ const CypherEditor: Component<{
     }
   };
 
+  const addCurrentToFavorites = () => {
+    const currentQuery = inputRef?.value?.trim();
+    if (currentQuery) {
+      addQueryToFavorites(currentQuery);
+    }
+  };
+
   const executeQuery = async () => {
     setLoading(true);
     setError(null);
@@ -229,6 +237,14 @@ const CypherEditor: Component<{
           >
             {" "}
             <Workflow size={14} />{" "}
+          </button>
+
+          <button
+            class="icon-btn"
+            title="Zu Favoriten hinzufügen"
+            onClick={addCurrentToFavorites}
+          >
+            <Star size={14} />
           </button>
         </div>
 
