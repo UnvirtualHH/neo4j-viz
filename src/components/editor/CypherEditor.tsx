@@ -288,9 +288,8 @@ const CypherEditor: Component<{
             </div>
           )}
         </div>
-
-        {error() && <ErrorBanner message={error()!} />}
       </div>
+      {error() && <ErrorBanner message={error()!} />}
     </FloatingDialog>
   );
 };
