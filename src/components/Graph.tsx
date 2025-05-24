@@ -13,20 +13,20 @@ import {
   onMount,
   Show,
 } from "solid-js";
+import { EulerGraphLayout } from "../graph/layout/eulerlayout";
+import { ForceGraphLayout } from "../graph/layout/forcelayout";
+import { TreeLayout } from "../graph/layout/treelayout";
 import NetworkGraph from "../graph/networkgraph";
 import Node from "../graph/node";
 import { updateNodeProperties } from "../service/cypher";
+import { useSetting } from "../store/settings";
 import { GraphRow, Neo4jId } from "../types/graphdata";
 import debounce from "../utils/debounce";
-import PropertiesDialog from "./graph/PropertiesDialog";
-import Search from "./search/Search";
-import ZoomControl from "./graph/ZoomControl";
-import { ForceGraphLayout } from "../graph/layout/forcelayout";
-import { EulerGraphLayout } from "../graph/layout/eulerlayout";
 import LayoutSwitcher, { LayoutType } from "./graph/LayoutSwitcher";
-import { TreeLayout } from "../graph/layout/treelayout";
-import { useSetting } from "../store/settings";
 import createMinimap from "./graph/minimap";
+import PropertiesDialog from "./graph/PropertiesDialog";
+import ZoomControl from "./graph/ZoomControl";
+import Search from "./search/Search";
 
 const Graph: Component<{ data: GraphRow[] }> = (props) => {
   const [selectedLayout, setSelectedLayout] = createSignal<LayoutType>("force");
@@ -62,7 +62,7 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
   const initPixi = async () => {
     await pixiApp.init({
       canvas: canvasRef,
-      backgroundColor: 0x444444,
+      backgroundColor: 0x888888,
       width: canvasRef.clientWidth,
       height: canvasRef.clientHeight,
       antialias: true,

@@ -4,18 +4,18 @@ import {
   Database,
   Home,
   Server,
-  Star,
   SettingsIcon,
+  Star,
 } from "lucide-solid";
 import { createSignal, Show } from "solid-js";
 import { isConnected } from "../../store/connection";
-import Databases from "./items/Databases";
 import { removeFromTray, trayDialogs } from "../../store/dialog";
-import SchemaInfo from "./items/Schema";
-import History from "./items/History";
 import { setEditorQuery } from "../../store/query";
-import Settings from "./items/Settings";
+import Databases from "./items/Databases";
 import Favorites from "./items/Favorites";
+import History from "./items/History";
+import SchemaInfo from "./items/Schema";
+import Settings from "./items/Settings";
 
 const BottomNav = () => {
   const [active, setActive] = createSignal("home");
@@ -93,7 +93,7 @@ const BottomNav = () => {
         <Settings onClose={() => setShowSettings(false)} />
       </Show>
 
-      <div class="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 bg-white/70 backdrop-blur-md border border-gray-300 rounded-2xl shadow-md px-4 py-1 flex gap-6">
+      <div class="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 glass rounded-2xl shadow-md px-4 py-1 flex gap-6">
         {navItems.map(({ id, icon: Icon, tooltip, action }) => (
           <button
             onClick={() => {
@@ -105,7 +105,7 @@ const BottomNav = () => {
             }`}
           >
             <div class="relative">
-              <Icon class="w-5 h-5" />
+              <Icon class="w-5 h-5 text-white" />
               {id === "connections" && (
                 <div
                   class={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white transition-opacity ${

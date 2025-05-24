@@ -1,5 +1,5 @@
 import { ZoomIn, ZoomOut } from "lucide-solid";
-import { Component, Accessor } from "solid-js";
+import { Accessor, Component } from "solid-js";
 
 type ZoomControlProps = {
   zoomLevel: Accessor<number>;
@@ -24,7 +24,7 @@ const ZoomControl: Component<ZoomControlProps> = ({
   };
 
   return (
-    <div class="absolute bottom-4 right-4 flex flex-col items-center gap-2 z-10 bg-black/60 p-3 rounded-xl shadow-lg">
+    <div class="absolute bottom-4 right-4 flex flex-col items-center gap-2 z-10 glass p-3 rounded-xl shadow-lg">
       <button
         class="text-white text-2xl leading-none hover:scale-110 transition"
         onClick={() => onZoomChange(Math.min(zoomLevel() * 1.2, maxZoom))}

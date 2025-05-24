@@ -1,3 +1,4 @@
+import { EyeOff, Maximize2, Minimize2, X } from "lucide-solid";
 import {
   createSignal,
   JSX,
@@ -6,10 +7,9 @@ import {
   Show,
   type Component,
 } from "solid-js";
-import { EyeOff, Maximize2, Minimize2, X } from "lucide-solid";
 
-import "./FloatingDialog.css";
 import { addToTray } from "../../store/dialog";
+import "./FloatingDialog.css";
 
 type FloatingDialogProps = {
   title: string;
@@ -115,7 +115,7 @@ const FloatingDialog: Component<FloatingDialogProps> = (props) => {
   return (
     <Show when={!hiddenToTray()}>
       <div
-        class={`floating-dialog ${props.class ?? ""} 
+        class={`floating-dialog glass ${props.class ?? ""} 
         ${animatingOut() ? "fade-slide-out" : "fade-slide-in"} 
         ${minimized() ? "minimized" : ""}`}
         style={{
@@ -164,12 +164,7 @@ const FloatingDialog: Component<FloatingDialogProps> = (props) => {
         </div>
 
         {!minimized() && (
-          <div
-            class="floating-dialog-body"
-            style={{ height: `calc(100% - 2.5rem)` }}
-          >
-            {props.children}
-          </div>
+          <div class="floating-dialog-body">{props.children}</div>
         )}
 
         {!minimized() && (

@@ -1,6 +1,5 @@
+import { Orbit, TreeDeciduous, Zap } from "lucide-solid";
 import { Component } from "solid-js";
-import { Zap, Orbit } from "lucide-solid";
-import { TreeDeciduous } from "lucide-solid";
 
 export type LayoutType = "force" | "euler" | "tree";
 
