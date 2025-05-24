@@ -5,8 +5,8 @@ import {
   createEffect,
   Component,
 } from "solid-js";
-import { useCypherAutocomplete } from "./autocomplete";
-import { highlightCypher } from "./highlight";
+import { useCypherAutocomplete } from "../../utils/editor/autocomplete";
+import { highlightCypher } from "../../utils/editor/highlight";
 import "./CypherEditor.css";
 import { getFullSchema, runCypherQuery } from "../../service/cypher";
 import { isConnected } from "../../store/connection";
@@ -17,11 +17,12 @@ import { DbSchema } from "../../types/schema";
 import { editorQuery } from "../../store/query";
 import { CypherQueryResult } from "../../types/graphdata";
 
-type CypherEditorProps = {
-  onQueryResult: (result: CypherQueryResult) => void;
-};
+import ErrorBanner from "./ErrorBanner";
+import AutocompleteBox from "./AutocompleteBox";
 
-const CypherEditor: Component<CypherEditorProps> = (props) => {
+const CypherEditor: Component<{
+  onQueryResult: (result: CypherQueryResult) => void;
+}> = (props) => {
   let inputRef!: HTMLTextAreaElement;
   let highlightRef!: HTMLDivElement;
   let lineNumberRef!: HTMLDivElement;
@@ -33,17 +34,11 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
   const [queryTime, setQueryTime] = createSignal<number | null>(null);
   const [nodeCount, setNodeCount] = createSignal<number | null>(null);
   const [relCount, setRelCount] = createSignal<number | null>(null);
-  const [labelStats, setLabelStats] = createSignal<Record<string, number>>({});
-  const [relTypeStats, setRelTypeStats] = createSignal<Record<string, number>>(
-    {}
-  );
-
   const [autocomplete, setAutocomplete] = createSignal<ReturnType<
     typeof useCypherAutocomplete
   > | null>(null);
 
-  const [minimized, setMinimized] = createSignal(false);
-  const [position, setPosition] = createSignal({ x: 0, y: 20 });
+  let suppressAutocomplete = false;
 
   createEffect(() => {
     if (schema()) {
@@ -56,6 +51,12 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     const cursor = inputRef.selectionStart;
     highlightRef.innerHTML = highlightCypher(code);
     updateLineNumbers(code);
+
+    if (suppressAutocomplete) {
+      suppressAutocomplete = false;
+      autocomplete()?.clearSuggestions();
+      return;
+    }
 
     if (code.length > 3) {
       autocomplete()?.updateSuggestions(code, cursor);
@@ -94,12 +95,12 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
 
     inputRef.value = before + text + after;
     inputRef.selectionStart = inputRef.selectionEnd = start + text.length;
-
     autocomplete()?.clearSuggestions();
     syncHighlight();
   };
 
   const insertQuickQuery = (query: string) => {
+    suppressAutocomplete = true;
     inputRef.value = query;
     syncHighlight();
     executeQuery();
@@ -151,8 +152,6 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
       setQueryTime(result.executionTimeMs);
       setNodeCount(result.nodeCount);
       setRelCount(result.relationshipCount);
-      setLabelStats(result.labelStats);
-      setRelTypeStats(result.relTypeStats);
       props.onQueryResult(result);
     } catch (err: any) {
       setError(err.message || "Unbekannter Fehler");
@@ -175,12 +174,6 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
 
   onMount(() => {
     syncHighlight();
-    const defaultWidth = 600;
-    const padding = 20;
-    setPosition({
-      x: window.innerWidth - defaultWidth - padding,
-      y: 20,
-    });
     document.addEventListener("mousedown", handleClickOutside);
   });
 
@@ -198,17 +191,19 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
     document.removeEventListener("mousedown", handleClickOutside);
   });
 
+  const suggestions = () => autocomplete()?.suggestions() || [];
+
   return (
     <FloatingDialog
       title="Cypher Editor"
       initialPosition={autoDockPosition("top-right", { width: 600 })}
       initialSize={{ width: 600, height: 240 }}
       closable={false}
-      minimizable={true}
-      draggable={true}
-      resizable={true}
-      trayable={true}
-      onClose={() => setMinimized(true)}
+      minimizable
+      draggable
+      resizable
+      trayable
+      onClose={() => {}}
     >
       <div class="editor-container relative">
         <div class="quick-query-buttons absolute top-2 right-2 flex gap-2 z-10">
@@ -217,7 +212,8 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
             title="Alle Knoten anzeigen"
             onClick={() => insertQuickQuery("MATCH (n) RETURN n;")}
           >
-            <Circle size={14} />
+            {" "}
+            <Circle size={14} />{" "}
           </button>
           <button
             class="icon-btn"
@@ -226,30 +222,24 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
               insertQuickQuery("MATCH (n)-[r]-(m) RETURN n, r, m;")
             }
           >
-            <Workflow size={14} />
+            {" "}
+            <Workflow size={14} />{" "}
           </button>
         </div>
 
-        {autocomplete()?.suggestions()!.length! > 0 && (
-          <div class="autocomplete-box" ref={autocompleteRef}>
-            {autocomplete()
-              ?.suggestions()
-              .map((item, index) => (
-                <div
-                  class={`autocomplete-item ${
-                    index === autocomplete()?.selectedIndex() ? "selected" : ""
-                  }`}
-                  onMouseDown={() => insertAutocomplete(item.label)}
-                >
-                  <span class="suggestion-label">{item.label}</span>
-                  <span class="suggestion-type">{item.kind}</span>
-                </div>
-              ))}
+        {suggestions().length > 0 && autocomplete() && (
+          <div ref={autocompleteRef}>
+            <AutocompleteBox
+              suggestions={suggestions()}
+              selectedIndex={autocomplete()!.selectedIndex()}
+              onSelect={insertAutocomplete}
+            />
           </div>
         )}
 
         <div class="line-numbers" ref={lineNumberRef}></div>
         <div class="highlight-layer" ref={highlightRef} aria-hidden="true" />
+
         <textarea
           class="editor-input"
           ref={inputRef}
@@ -293,6 +283,8 @@ const CypherEditor: Component<CypherEditorProps> = (props) => {
             </div>
           )}
         </div>
+
+        {error() && <ErrorBanner message={error()!} />}
       </div>
     </FloatingDialog>
   );

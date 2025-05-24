@@ -3,7 +3,6 @@ import {
   Application,
   Container,
   FederatedPointerEvent,
-  Graphics,
   PointData,
 } from "pixi.js";
 import {
@@ -27,12 +26,9 @@ import { EulerGraphLayout } from "../graph/layout/eulerlayout";
 import LayoutSwitcher, { LayoutType } from "./graph/LayoutSwitcher";
 import { TreeLayout } from "../graph/layout/treelayout";
 import { useSetting } from "../store/settings";
+import createMinimap from "./graph/minimap";
 
-type GraphProps = {
-  data: GraphRow[];
-};
-
-const Graph: Component<GraphProps> = (props) => {
+const Graph: Component<{ data: GraphRow[] }> = (props) => {
   const [selectedLayout, setSelectedLayout] = createSignal<LayoutType>("force");
   const [viewportReady, setViewportReady] = createSignal(false);
   const [matchCount, setMatchCount] = createSignal(0);
@@ -47,15 +43,7 @@ const Graph: Component<GraphProps> = (props) => {
   let isViewportDragging = false;
   let lastPointerPosition: { x: number; y: number } | null = null;
 
-  let minimapContainer: Container;
-  let minimapOverlay: Graphics;
-  let minimapViewFrame: Graphics;
-
-  const minZoom = 0.1;
-  const maxZoom = 10;
-
-  const minimapPadding = 10;
-  const minimapSize = 200;
+  let minimap: ReturnType<typeof createMinimap>;
 
   const zoomSetting = useSetting("requireCtrlForZoom");
 
@@ -100,8 +88,8 @@ const Graph: Component<GraphProps> = (props) => {
 
         const currentZoom = viewport.scale.x;
         const newScale = zoomIn
-          ? Math.min(currentZoom * scaleFactor, maxZoom)
-          : Math.max(currentZoom / scaleFactor, minZoom);
+          ? Math.min(currentZoom * scaleFactor, 10)
+          : Math.max(currentZoom / scaleFactor, 0.1);
 
         setZoomTo(newScale);
       }
@@ -109,7 +97,6 @@ const Graph: Component<GraphProps> = (props) => {
 
     pixiApp.stage.hitArea = pixiApp.screen;
     pixiApp.stage.eventMode = "static";
-
     pixiApp.stage.addChild(viewport);
 
     canvasRef.addEventListener("pointerdown", (e) => {
@@ -120,13 +107,10 @@ const Graph: Component<GraphProps> = (props) => {
 
     window.addEventListener("pointermove", (e) => {
       if (!isViewportDragging || !lastPointerPosition) return;
-
       const dx = e.clientX - lastPointerPosition.x;
       const dy = e.clientY - lastPointerPosition.y;
-
       viewport.x += dx;
       viewport.y += dy;
-
       lastPointerPosition = { x: e.clientX, y: e.clientY };
     });
 
@@ -135,145 +119,24 @@ const Graph: Component<GraphProps> = (props) => {
     window.addEventListener("resize", resizeHandler);
 
     setViewportReady(true);
-
-    minimapContainer = new Container();
-    minimapOverlay = new Graphics();
-    minimapViewFrame = new Graphics();
-
-    minimapOverlay.eventMode = "static";
-    minimapOverlay.cursor = "pointer";
-
-    minimapContainer.addChild(minimapOverlay);
-    minimapContainer.addChild(minimapViewFrame);
-
-    pixiApp.stage.addChild(minimapContainer);
-
-    minimapOverlay.on("pointerdown", (event) => {
-      const local = event.getLocalPosition(minimapOverlay);
-      const bounds = getGraphBounds();
-      if (!bounds) return;
-
-      const scale = getMinimapScale(bounds);
-      const targetX = bounds.minX + (local.x / minimapSize) * bounds.width;
-      const targetY = bounds.minY + (local.y / minimapSize) * bounds.height;
-
-      viewport.moveCenter(targetX, targetY);
-    });
   };
-
-  function drawMinimap() {
-    if (!graph) return;
-
-    const nodes = graph.getNodes();
-    if (nodes.length === 0) return;
-
-    const xs = nodes.map((n) => n.position.x);
-    const ys = nodes.map((n) => n.position.y);
-    let minX = Math.min(...xs);
-    let maxX = Math.max(...xs);
-    let minY = Math.min(...ys);
-    let maxY = Math.max(...ys);
-
-    const paddingFactor = 0.1;
-    const width = maxX - minX || 1;
-    const height = maxY - minY || 1;
-
-    minX -= width * paddingFactor;
-    maxX += width * paddingFactor;
-    minY -= height * paddingFactor;
-    maxY += height * paddingFactor;
-
-    const graphWidth = maxX - minX || 1;
-    const graphHeight = maxY - minY || 1;
-
-    const screenHeight = pixiApp.screen.height;
-    minimapContainer.position.set(
-      minimapPadding,
-      screenHeight - minimapSize - minimapPadding
-    );
-
-    const scaleX = minimapSize / graphWidth;
-    const scaleY = minimapSize / graphHeight;
-    const scale = Math.min(scaleX, scaleY);
-
-    const drawWidth = graphWidth * scale;
-    const drawHeight = graphHeight * scale;
-    const offsetX = (minimapSize - drawWidth) / 2;
-    const offsetY = (minimapSize - drawHeight) / 2;
-
-    minimapOverlay.clear();
-    minimapOverlay.beginFill(0x1e1e1e, 0.8);
-    minimapOverlay.drawRoundedRect(0, 0, minimapSize, minimapSize, 8);
-    minimapOverlay.endFill();
-
-    minimapOverlay.beginFill(0x3fa9f5);
-    for (const node of nodes) {
-      const x = (node.position.x - minX) * scale + offsetX;
-      const y = (node.position.y - minY) * scale + offsetY;
-      minimapOverlay.drawCircle(x, y, 2);
-    }
-    minimapOverlay.endFill();
-
-    const view = viewport.getVisibleBounds();
-    const vx = (view.x - minX) * scale + offsetX;
-    const vy = (view.y - minY) * scale + offsetY;
-    const vw = view.width * scale;
-    const vh = view.height * scale;
-
-    minimapViewFrame.clear();
-    minimapViewFrame.lineStyle(1, 0xffffff, 1);
-    minimapViewFrame.drawRect(vx, vy, vw, vh);
-  }
-
-  function getGraphBounds() {
-    const nodes = graph.getNodes();
-    if (nodes.length === 0) return null;
-
-    const xs = nodes.map((n) => n.position.x);
-    const ys = nodes.map((n) => n.position.y);
-
-    return {
-      minX: Math.min(...xs),
-      maxX: Math.max(...xs),
-      minY: Math.min(...ys),
-      maxY: Math.max(...ys),
-      width: Math.max(...xs) - Math.min(...xs),
-      height: Math.max(...ys) - Math.min(...ys),
-    };
-  }
-
-  function getMinimapScale(bounds: { width: number; height: number }) {
-    const scaleX = minimapSize / bounds.width;
-    const scaleY = minimapSize / bounds.height;
-    return Math.min(scaleX, scaleY);
-  }
 
   const onDragMove = (event: PointerEvent) => {
     if (!dragTarget) return;
-
-    const newPos = viewport.toLocal({
-      x: event.clientX,
-      y: event.clientY,
-    });
+    const newPos = viewport.toLocal({ x: event.clientX, y: event.clientY });
     dragTarget.position.set(newPos.x - dragOffset.x, newPos.y - dragOffset.y);
-
     graph.updateEdges();
   };
 
   const onDragStart = (event: FederatedPointerEvent) => {
     const node = event.currentTarget;
-
     dragTarget = node;
-
     node.alpha = 0.5;
     node.cursor = "grabbing";
-
     const localPos = event.getLocalPosition(node);
     dragOffset.x = localPos.x;
     dragOffset.y = localPos.y;
-
     viewport.pause = true;
-
     window.addEventListener("pointermove", onDragMove);
   };
 
@@ -282,16 +145,13 @@ const Graph: Component<GraphProps> = (props) => {
       dragTarget.alpha = 1;
       dragTarget.cursor = "pointer";
       dragTarget = null;
-
       window.removeEventListener("pointermove", onDragMove);
       viewport.pause = false;
     }
-
     isViewportDragging = false;
     lastPointerPosition = null;
   };
 
-  // TODO: outsource?
   const buildGraphFromData = () => {
     if (!viewport) return;
 
@@ -310,7 +170,6 @@ const Graph: Component<GraphProps> = (props) => {
 
     for (const { sourceNode, relation, targetNode } of props.data) {
       if (!sourceNode?.identity) continue;
-
       const sourceId =
         sourceNode.elementId ?? sourceNode.identity.low.toString();
 
@@ -337,7 +196,6 @@ const Graph: Component<GraphProps> = (props) => {
             });
           },
         });
-
         graph.addNode(node);
         nodeMap.set(sourceId, node);
       }
@@ -369,7 +227,6 @@ const Graph: Component<GraphProps> = (props) => {
               });
             },
           });
-
           graph.addNode(node);
           nodeMap.set(targetId, node);
         }
@@ -389,7 +246,6 @@ const Graph: Component<GraphProps> = (props) => {
             setInspectedProps({
               data: relation.properties,
               title: relation.type,
-              // title: relation.labels?.join(", ") || "Relationship",
               type: "relationship",
               elementId: relation.elementId,
               identity: relation.identity,
@@ -401,14 +257,12 @@ const Graph: Component<GraphProps> = (props) => {
 
     viewport.removeChildren();
     viewport.addChild(graph);
-
     graph.startSimulation();
-
-    viewport.on("moved", drawMinimap);
-    viewport.on("zoomed", drawMinimap);
-    viewport.on("frame-end", drawMinimap);
-
-    drawMinimap();
+    minimap = createMinimap(pixiApp, viewport, graph);
+    viewport.on("moved", minimap.draw);
+    viewport.on("zoomed", minimap.draw);
+    viewport.on("frame-end", minimap.draw);
+    minimap.draw();
   };
 
   onMount(initPixi);
@@ -461,24 +315,17 @@ const Graph: Component<GraphProps> = (props) => {
 
   function setZoomTo(scale: number) {
     if (!viewportReady()) return;
-
     const screenCenter = {
       x: viewport.screenWidth / 2,
       y: viewport.screenHeight / 2,
     };
-
     const worldCenterBefore = viewport.toWorld(screenCenter.x, screenCenter.y);
-
     viewport.scale.set(scale);
-
     const worldCenterAfter = viewport.toWorld(screenCenter.x, screenCenter.y);
-
     const dx = worldCenterAfter.x - worldCenterBefore.x;
     const dy = worldCenterAfter.y - worldCenterBefore.y;
-
     viewport.x += dx * viewport.scale.x;
     viewport.y += dy * viewport.scale.y;
-
     setZoomLevel(scale);
   }
 
@@ -486,7 +333,6 @@ const Graph: Component<GraphProps> = (props) => {
     <>
       <Search onSearch={handleSearch} matchCount={matchCount()} />
       <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />
-
       <Show when={viewportReady()}>
         <LayoutSwitcher
           selected={selectedLayout()}
@@ -495,15 +341,13 @@ const Graph: Component<GraphProps> = (props) => {
             buildGraphFromData();
           }}
         />
-
         <ZoomControl
           zoomLevel={zoomLevel}
-          minZoom={minZoom}
-          maxZoom={maxZoom}
+          minZoom={0.1}
+          maxZoom={10}
           onZoomChange={(z) => setZoomTo(z)}
         />
       </Show>
-
       <Show when={inspectedProps()} keyed>
         {(inspected) => (
           <PropertiesDialog

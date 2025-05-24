@@ -8,6 +8,7 @@ import { EulerGraphLayout } from "./layout/eulerlayout";
 class NetworkGraph extends Container {
   private nodes: Node[] = [];
   private edges: Edge<Data>[] = [];
+  private nodeMap = new Map<NodeId, Node>();
 
   private animate = false;
   private layoutStrategy: LayoutStrategy = new EulerGraphLayout();
@@ -21,8 +22,11 @@ class NetworkGraph extends Container {
   }
 
   addNode(properties: NodeProperties) {
+    if (this.nodeMap.has(properties.id)) return;
+
     const node = new Node(properties);
     this.nodes.push(node);
+    this.nodeMap.set(properties.id, node);
     this.addChild(node);
   }
 
@@ -32,8 +36,8 @@ class NetworkGraph extends Container {
       endId: NodeId;
     }
   ) {
-    const startNode = this.nodes.find((node) => node.id === properties.startId);
-    const endNode = this.nodes.find((node) => node.id === properties.endId);
+    const startNode = this.getNodeById(properties.startId);
+    const endNode = this.getNodeById(properties.endId);
     if (!startNode || !endNode) {
       throw new Error("Invalid node IDs for edge");
     }
@@ -43,22 +47,13 @@ class NetworkGraph extends Container {
       startNode,
       endNode,
     });
+
     this.edges.push(edge as unknown as Edge<Data>);
     this.addChild(edge);
   }
 
-  updateEdges() {
-    this.edges.forEach((edge) => edge.drawEdge());
-  }
-
-  updateEdgePositions(id: NodeId) {
-    const edges = this.edges.filter(
-      (edge) => edge.startNode.id === id || edge.endNode.id === id
-    );
-
-    edges.forEach((edge) => {
-      edge.updatePosition();
-    });
+  getNodeById(id: NodeId): Node | undefined {
+    return this.nodeMap.get(id);
   }
 
   getNodes() {
@@ -69,9 +64,29 @@ class NetworkGraph extends Container {
     return this.edges;
   }
 
+  updateEdges() {
+    this.edges.forEach((edge) => edge.drawEdge());
+  }
+
+  updateEdgePositions(id: NodeId) {
+    const edges = this.edges.filter(
+      (edge) => edge.startNode.id === id || edge.endNode.id === id
+    );
+    edges.forEach((edge) => edge.updatePosition());
+  }
+
   clearHighlights() {
     this.nodes.forEach((n) => n.setHighlight(false));
     this.edges.forEach((e) => e.setHighlight(false));
+  }
+
+  destroyGraph() {
+    this.nodes.forEach((n) => n.destroy());
+    this.edges.forEach((e) => e.destroy());
+    this.removeChildren();
+    this.nodes = [];
+    this.edges = [];
+    this.nodeMap.clear();
   }
 
   startSimulation() {
@@ -97,9 +112,7 @@ class NetworkGraph extends Container {
 
       frameCount++;
 
-      if (this.layoutStrategy?.apply) {
-        this.layoutStrategy.apply(this.nodes, this.edges);
-      }
+      this.layoutStrategy?.apply(this.nodes, this.edges);
 
       this.nodes.forEach((node) => {
         const velX = (node.vx / node.mass) * damping;
