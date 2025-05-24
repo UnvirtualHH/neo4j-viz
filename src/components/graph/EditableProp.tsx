@@ -1,5 +1,5 @@
-import { Component, createEffect, createSignal, Show } from "solid-js";
 import { ClipboardCopy } from "lucide-solid";
+import { Component, createEffect, createSignal, Show } from "solid-js";
 import { inferNeo4jType, Neo4jValueType } from "../../types/neo4jvalues";
 import { neo4jTypeIcons } from "../layout/Neo4jTypeIcons";
 
@@ -47,7 +47,7 @@ const EditableProp: Component<EditablePropProps> = (props) => {
 
   return (
     <li class="flex justify-between gap-2 border-b border-gray-200 pb-1 group items-center">
-      <div class="flex items-center gap-1 text-gray-500">
+      <div class="flex items-center gap-1">
         <span title={type()}>
           {neo4jTypeIcons[type()]?.() ?? neo4jTypeIcons["any"]()}
         </span>
@@ -128,7 +128,7 @@ const EditableProp: Component<EditablePropProps> = (props) => {
           onClick={props.onCopy}
           title="Kopieren"
         >
-          <ClipboardCopy size={14} class="text-gray-400 hover:text-black" />
+          <ClipboardCopy size={14} />
         </button>
       </div>
     </li>

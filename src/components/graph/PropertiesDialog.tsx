@@ -1,18 +1,18 @@
+import { Plus } from "lucide-solid";
 import {
-  Show,
   For,
-  createSignal,
+  Show,
   createEffect,
+  createSignal,
   type Component,
 } from "solid-js";
+import { deleteByElementId } from "../../service/cypher";
+import { Neo4jId } from "../../types/graphdata";
+import ConfirmDialog from "../dialog/ConfirmDialog";
 import FloatingDialog from "../dialog/FloatingDialog";
 import { autoDockPosition } from "../dialog/autoDockPosition";
-import { Neo4jId } from "../../types/graphdata";
-import EditableProp from "./EditableProp";
-import { Plus } from "lucide-solid";
-import ConfirmDialog from "../dialog/ConfirmDialog";
-import { deleteByElementId } from "../../service/cypher";
 import AddPropertyForm from "./AddProperty";
+import EditableProp from "./EditableProp";
 
 type PropertiesDialogProps = {
   data: Record<string, any>;
@@ -68,12 +68,12 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
       minimizable
       onClose={props.onClose}
     >
-      <div class="overflow-y-auto text-sm text-gray-800 space-y-2 px-2 pb-2">
+      <div class="overflow-y-auto text-sm space-y-2 px-2 pb-2 text-white">
         <div class="flex justify-between items-center mb-1">
-          <h2 class="text-sm font-semibold text-gray-600">Eigenschaften</h2>
+          <h2 class="text-sm font-semibold">Eigenschaften</h2>
           <button
             title="Property hinzufügen"
-            class="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50"
+            class="text-green-600 hover:text-white p-1 rounded bg-white hover:bg-green-600"
             onClick={() => setShowAddProp((v) => !v)}
           >
             <Plus size={16} />
@@ -114,9 +114,7 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
           <Show
             when={Object.keys(localData()).length > 0}
             fallback={
-              <p class="text-gray-500 italic py-4 text-sm">
-                Keine Properties vorhanden
-              </p>
+              <p class="italic py-4 text-sm">Keine Properties vorhanden</p>
             }
           >
             <For each={sortedKeys()}>
@@ -140,7 +138,7 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
           </Show>
         </ul>
       </div>
-      <div class="fixed bottom-0 left-0 right-0 p-2 border-t bg-white flex justify-between items-center">
+      <div class="fixed bottom-0 left-0 right-0 p-2 border-t border-t-white flex justify-between items-center">
         <button
           class="px-3 py-1 text-sm rounded bg-red-100 text-red-700 hover:bg-red-200"
           onClick={() => setShowConfirm(true)}
