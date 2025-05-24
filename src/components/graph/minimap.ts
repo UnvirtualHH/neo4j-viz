@@ -126,11 +126,11 @@ export default function createMinimap(
     }
   };
 
-  let fadeProgress = 1;
+  let fadeProgress = 1.5;
   const fadeOut = () => {
     fadeProgress -= 0.05;
     if (fadeProgress <= 0) {
-      fadeProgress = 1;
+      fadeProgress = 1.5;
       minimapViewFrame.alpha = 0;
       app.ticker.remove(fadeOut);
     } else {

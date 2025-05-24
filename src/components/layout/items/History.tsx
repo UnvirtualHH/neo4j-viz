@@ -1,6 +1,7 @@
 import { For, onCleanup, onMount } from "solid-js";
 import { queryHistory } from "../../../store/history";
-import { Clock } from "lucide-solid";
+import { addQueryToFavorites } from "../../../store/favorites";
+import { Clock, Star } from "lucide-solid";
 import { formatTimeAgo } from "../../../utils/time";
 
 const History = (props: {
@@ -33,21 +34,31 @@ const History = (props: {
       <div class="space-y-2">
         <For each={queryHistory()}>
           {(entry) => (
-            <button
-              onClick={() => props.onSelect(entry.query)}
-              title={entry.query}
-              class="w-full text-left border border-gray-200 rounded-lg p-2 bg-white hover:bg-gray-50 transition flex flex-col items-start"
-            >
-              <pre class="font-mono text-gray-800 whitespace-pre-wrap text-xs leading-snug max-h-16 overflow-hidden">
-                {entry.query}
-              </pre>
-              <span
-                class="text-xs text-gray-400 mt-1"
-                title={new Date(entry.timestamp).toLocaleString()}
+            <div class="relative group">
+              <button
+                onClick={() => props.onSelect(entry.query)}
+                title={entry.query}
+                class="w-full text-left border border-gray-200 rounded-lg p-2 bg-white hover:bg-gray-50 transition flex flex-col items-start pr-8"
               >
-                {formatTimeAgo(entry.timestamp)}
-              </span>
-            </button>
+                <pre class="font-mono text-gray-800 whitespace-pre-wrap text-xs leading-snug max-h-16 overflow-hidden">
+                  {entry.query}
+                </pre>
+                <span
+                  class="text-xs text-gray-400 mt-1"
+                  title={new Date(entry.timestamp).toLocaleString()}
+                >
+                  {formatTimeAgo(entry.timestamp)}
+                </span>
+              </button>
+
+              <button
+                onClick={() => addQueryToFavorites(entry.query)}
+                class="absolute top-2 right-2 text-yellow-500 hover:text-yellow-600 opacity-80 hover:opacity-100 transition"
+                title="Zu Favoriten"
+              >
+                <Star class="w-4 h-4" />
+              </button>
+            </div>
           )}
         </For>
       </div>

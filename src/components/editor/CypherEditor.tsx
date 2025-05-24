@@ -182,7 +182,9 @@ const CypherEditor: Component<{
 
   createEffect(() => {
     const newQuery = editorQuery();
+
     if (newQuery && inputRef && inputRef.value !== newQuery) {
+      suppressAutocomplete = true;
       inputRef.value = newQuery;
       inputRef.selectionStart = inputRef.selectionEnd = newQuery.length;
       executeQuery();

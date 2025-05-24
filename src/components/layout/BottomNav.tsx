@@ -15,6 +15,7 @@ import SchemaInfo from "./items/Schema";
 import History from "./items/History";
 import { setEditorQuery } from "../../store/query";
 import Settings from "./items/Settings";
+import Favorites from "./items/Favorites";
 
 const BottomNav = () => {
   const [active, setActive] = createSignal("home");
@@ -22,10 +23,16 @@ const BottomNav = () => {
   const [showSchema, setShowSchema] = createSignal(false);
   const [showHistory, setShowHistory] = createSignal(false);
   const [showSettings, setShowSettings] = createSignal(false);
+  const [showFavorites, setShowFavorites] = createSignal(false);
 
   const navItems = [
     { id: "home", icon: Home, tooltip: "Query" },
-    { id: "favorites", icon: Star, tooltip: "Favoriten" },
+    {
+      id: "favorites",
+      icon: Star,
+      tooltip: "Favoriten",
+      action: () => setShowFavorites(true),
+    },
     {
       id: "connections",
       icon: Database,
@@ -54,6 +61,16 @@ const BottomNav = () => {
 
   return (
     <>
+      <Show when={showFavorites()}>
+        <Favorites
+          onClose={() => setShowFavorites(false)}
+          onSelect={(q) => {
+            setEditorQuery(q);
+            setShowFavorites(false);
+          }}
+        />
+      </Show>
+
       <Show when={showDatabases()}>
         <Databases onClose={() => setShowDatabases(false)} />
       </Show>
