@@ -1,11 +1,14 @@
-import { ClipboardCopy } from "lucide-solid";
 import { Component, createEffect, createSignal, Show } from "solid-js";
+import { ClipboardCopy } from "lucide-solid";
+import { inferNeo4jType, Neo4jValueType } from "../../types/neo4jvalues";
+import { neo4jTypeIcons } from "../layout/Neo4jTypeIcons";
 
 type EditablePropProps = {
   keyName: string;
   value: any;
   onChange: (val: any) => void;
   onCopy: () => void;
+  readonly?: boolean;
 };
 
 function isDateString(value: any): boolean {
@@ -36,17 +39,29 @@ const EditableProp: Component<EditablePropProps> = (props) => {
     setEditing(false);
   };
 
+  const type = (): Neo4jValueType => {
+    if (props.keyName === "id" || props.keyName === "identity") return "id";
+    if (props.keyName === "elementId") return "elementId";
+    return inferNeo4jType(props.value);
+  };
+
   return (
-    <li class="flex justify-between gap-2 border-b border-gray-200 pb-1 group">
-      <span class="font-mono text-gray-500">{props.keyName}</span>
+    <li class="flex justify-between gap-2 border-b border-gray-200 pb-1 group items-center">
+      <div class="flex items-center gap-1 text-gray-500">
+        <span title={type()}>
+          {neo4jTypeIcons[type()]?.() ?? neo4jTypeIcons["any"]()}
+        </span>
+        <span class="font-mono">{props.keyName}</span>
+      </div>
+
       <div class="flex items-center gap-1">
         <Show
-          when={editing()}
+          when={editing() && !props.readonly}
           fallback={
             <span
               class="truncate text-right cursor-pointer"
-              onClick={() => setEditing(true)}
-              title="Zum Bearbeiten klicken"
+              onClick={() => !props.readonly && setEditing(true)}
+              title={props.readonly ? "Nur lesen" : "Zum Bearbeiten klicken"}
             >
               {typeof props.value === "string"
                 ? `"${props.value}"`
