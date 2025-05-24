@@ -2,10 +2,14 @@ import { createSignal } from "solid-js";
 
 export type AppSettings = {
   requireCtrlForZoom: boolean;
+  enableMinimap: boolean;
+  enableAutocomplete: boolean;
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
   requireCtrlForZoom: true,
+  enableMinimap: true,
+  enableAutocomplete: true,
 };
 
 function loadSettings(): AppSettings {

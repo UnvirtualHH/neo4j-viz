@@ -14,26 +14,31 @@ export class TreeLayout implements LayoutStrategy {
     edges.forEach((e) => {
       const from = e.startNode.id;
       const to = e.endNode;
+
       if (!childrenMap.has(from)) childrenMap.set(from, []);
       childrenMap.get(from)!.push(to);
     });
 
-    const placed = new Set<NodeId>();
-    const roots = nodes.filter(
-      (n) => !edges.some((e) => e.endNode.id === n.id)
-    );
+    const allTargets = new Set(edges.map((e) => e.endNode.id));
+    let roots = nodes.filter((n) => !allTargets.has(n.id));
 
+    if (roots.length === 0 && nodes.length > 0) {
+      roots = [nodes[0]];
+    }
+
+    const visited = new Set<NodeId>();
     let currentX = 0;
 
     const placeSubtree = (node: Node, depth: number) => {
+      if (visited.has(node.id)) return;
+      visited.add(node.id);
+
       const children = childrenMap.get(node.id) || [];
-      const childPositions = [];
+      const childPositions: number[] = [];
 
       for (const child of children) {
-        if (!placed.has(child.id)) {
-          placeSubtree(child, depth + 1);
-          childPositions.push(child.position.x);
-        }
+        placeSubtree(child, depth + 1);
+        childPositions.push(child.position.x);
       }
 
       const avgX =
@@ -43,7 +48,6 @@ export class TreeLayout implements LayoutStrategy {
 
       node.position.x = avgX;
       node.position.y = depth * this.verticalSpacing;
-      placed.add(node.id);
 
       if (childPositions.length === 0) {
         node.position.x = currentX;

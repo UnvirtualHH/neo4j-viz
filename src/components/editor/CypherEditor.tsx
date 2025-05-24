@@ -19,6 +19,7 @@ import { CypherQueryResult } from "../../types/graphdata";
 
 import ErrorBanner from "./ErrorBanner";
 import AutocompleteBox from "./AutocompleteBox";
+import { useSetting } from "../../store/settings";
 
 const CypherEditor: Component<{
   onQueryResult: (result: CypherQueryResult) => void;
@@ -38,6 +39,8 @@ const CypherEditor: Component<{
     typeof useCypherAutocomplete
   > | null>(null);
 
+  const autocompleteSetting = useSetting("enableAutocomplete");
+
   let suppressAutocomplete = false;
 
   createEffect(() => {
@@ -52,7 +55,7 @@ const CypherEditor: Component<{
     highlightRef.innerHTML = highlightCypher(code);
     updateLineNumbers(code);
 
-    if (suppressAutocomplete) {
+    if (!autocompleteSetting.get() || suppressAutocomplete) {
       suppressAutocomplete = false;
       autocomplete()?.clearSuggestions();
       return;

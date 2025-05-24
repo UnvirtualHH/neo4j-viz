@@ -2,12 +2,17 @@ import { onCleanup, onMount } from "solid-js";
 import { Application, Container, Graphics } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import NetworkGraph from "../../graph/networkgraph";
+import { useSetting } from "../../store/settings";
 
 export default function createMinimap(
   app: Application,
   viewport: Viewport,
   graph: NetworkGraph
 ) {
+  const minimapEnabled = useSetting("enableMinimap");
+  if (!minimapEnabled.get())
+    return { container: new Container(), draw: () => {} };
+
   const minimapContainer = new Container();
   const minimapOverlay = new Graphics();
   const minimapViewFrame = new Graphics();
@@ -106,7 +111,7 @@ export default function createMinimap(
       minimapLastFrame.h !== vh;
 
     if (changed) {
-      minimapViewFrame.alpha = 1; 
+      minimapViewFrame.alpha = 1;
       minimapViewFrame.clear();
       minimapViewFrame.beginFill(0xffff00, 0.1);
       minimapViewFrame.lineStyle(2, 0xffff00, 0.9);
