@@ -115,7 +115,9 @@ const FloatingDialog: Component<FloatingDialogProps> = (props) => {
   return (
     <Show when={!hiddenToTray()}>
       <div
-        class={`floating-dialog glass ${props.class ?? ""} 
+        class={`floating-dialog ${dragging() ? "glass" : "bg-slate-700"} ${
+          props.class ?? ""
+        } 
         ${animatingOut() ? "fade-slide-out" : "fade-slide-in"} 
         ${minimized() ? "minimized" : ""}`}
         style={{

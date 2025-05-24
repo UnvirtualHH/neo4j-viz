@@ -101,7 +101,7 @@ const BottomNav = () => {
               if (action) action();
             }}
             class={`relative group p-2 ${
-              active() === id ? "text-blue-600" : "text-gray-500"
+              active() === id ? "text-blue-600" : "text-white"
             }`}
           >
             <div class="relative">
@@ -129,7 +129,7 @@ const BottomNav = () => {
                   removeFromTray(d.id);
                 }}
                 title={d.title}
-                class="p-1 text-gray-500 hover:text-blue-600"
+                class="p-1 text-white hover:text-blue-600"
               >
                 <AppWindow class="w-5 h-5" />
               </button>
