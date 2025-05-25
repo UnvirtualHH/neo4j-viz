@@ -20,7 +20,11 @@ import { CypherQueryResult } from "../../types/graphdata";
 import ErrorBanner from "./ErrorBanner";
 import AutocompleteBox from "./AutocompleteBox";
 import { useSetting } from "../../store/settings";
-import { addQueryToFavorites } from "../../store/favorites";
+import {
+  addQueryToFavorites,
+  isFavorite,
+  removeQueryFromFavorites,
+} from "../../store/favorites";
 
 const CypherEditor: Component<{
   onQueryResult: (result: CypherQueryResult) => void;
@@ -29,7 +33,7 @@ const CypherEditor: Component<{
   let highlightRef!: HTMLDivElement;
   let lineNumberRef!: HTMLDivElement;
   let autocompleteRef!: HTMLDivElement;
-
+  const [currentQuery, setCurrentQuery] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
   const [loading, setLoading] = createSignal(false);
   const [schema, setSchema] = createSignal<DbSchema | null>(null);
@@ -40,6 +44,8 @@ const CypherEditor: Component<{
     typeof useCypherAutocomplete
   > | null>(null);
 
+  const [isCurrentFavorite, setIsCurrentFavorite] = createSignal(false);
+
   const autocompleteSetting = useSetting("enableAutocomplete");
 
   let suppressAutocomplete = false;
@@ -48,6 +54,11 @@ const CypherEditor: Component<{
     if (schema()) {
       setAutocomplete(useCypherAutocomplete(schema()!));
     }
+  });
+
+  createEffect(() => {
+    const q = currentQuery().trim();
+    setIsCurrentFavorite(isFavorite(q));
   });
 
   const syncHighlight = () => {
@@ -106,6 +117,7 @@ const CypherEditor: Component<{
   const insertQuickQuery = (query: string) => {
     suppressAutocomplete = true;
     inputRef.value = query;
+    setCurrentQuery(query);
     syncHighlight();
     executeQuery();
   };
@@ -147,19 +159,15 @@ const CypherEditor: Component<{
     }
   };
 
-  const addCurrentToFavorites = () => {
-    const currentQuery = inputRef?.value?.trim();
-    if (currentQuery) {
-      addQueryToFavorites(currentQuery);
-    }
-  };
-
   const executeQuery = async () => {
+    const query = currentQuery().trim();
+    if (!query) return;
+
     setLoading(true);
     setError(null);
 
     try {
-      const result = await runCypherQuery(inputRef.value);
+      const result = await runCypherQuery(query);
       setQueryTime(result.executionTimeMs);
       setNodeCount(result.nodeCount);
       setRelCount(result.relationshipCount);
@@ -219,6 +227,35 @@ const CypherEditor: Component<{
       onClose={() => {}}
     >
       <div class="editor-container relative">
+        <button
+          class="absolute top-1 left-1 z-10 text-sm"
+          title={
+            isCurrentFavorite()
+              ? "Aus Favoriten entfernen"
+              : "Zu Favoriten hinzufügen"
+          }
+          onClick={() => {
+            const query = currentQuery().trim();
+            if (!query) return;
+
+            if (isFavorite(query)) {
+              removeQueryFromFavorites(query);
+            } else {
+              addQueryToFavorites(query);
+            }
+
+            setIsCurrentFavorite(isFavorite(query));
+          }}
+        >
+          <Star
+            class={`w-5 h-5 transition ${
+              isCurrentFavorite()
+                ? "text-yellow-400 fill-yellow-400"
+                : "text-gray-300 hover:text-yellow-400"
+            }`}
+          />
+        </button>
+
         <div class="quick-query-buttons absolute top-2 right-2 flex gap-2 z-10">
           <button
             class="icon-btn"
@@ -238,14 +275,6 @@ const CypherEditor: Component<{
             {" "}
             <Workflow size={14} />{" "}
           </button>
-
-          <button
-            class="icon-btn"
-            title="Zu Favoriten hinzufügen"
-            onClick={addCurrentToFavorites}
-          >
-            <Star size={14} />
-          </button>
         </div>
 
         {suggestions().length > 0 && autocomplete() && (
@@ -264,7 +293,10 @@ const CypherEditor: Component<{
         <textarea
           class="editor-input"
           ref={inputRef}
-          onInput={syncHighlight}
+          onInput={() => {
+            syncHighlight();
+            setCurrentQuery(inputRef.value);
+          }}
           onKeyDown={handleKeyDown}
           onScroll={syncScroll}
           spellcheck={false}

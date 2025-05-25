@@ -16,7 +16,9 @@ function loadFromStorage(): FavoriteEntry[] {
   }
 }
 
-const [favorites, setFavorites] = createSignal<FavoriteEntry[]>(loadFromStorage());
+const [favorites, setFavorites] = createSignal<FavoriteEntry[]>(
+  loadFromStorage()
+);
 
 function addQueryToFavorites(query: string) {
   const trimmed = query.trim();
@@ -49,7 +51,13 @@ function clearFavorites() {
   localStorage.removeItem(FAVORITES_KEY);
 }
 
+function isFavorite(query: string): boolean {
+  const trimmed = query.trim();
+  return favorites().some((entry) => entry.query === trimmed);
+}
+
 export {
+  isFavorite,
   favorites,
   addQueryToFavorites,
   removeQueryFromFavorites,
