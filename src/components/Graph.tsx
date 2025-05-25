@@ -13,7 +13,6 @@ import {
   onMount,
   Show,
 } from "solid-js";
-import { EulerGraphLayout } from "../graph/layout/eulerlayout";
 import { ForceGraphLayout } from "../graph/layout/forcelayout";
 import { TreeLayout } from "../graph/layout/treelayout";
 import NetworkGraph from "../graph/networkgraph";
@@ -27,6 +26,7 @@ import createMinimap from "./graph/minimap";
 import PropertiesDialog from "./graph/PropertiesDialog";
 import ZoomControl from "./graph/ZoomControl";
 import Search from "./search/Search";
+import { RadialLayout } from "../graph/layout/radiallayout";
 
 const Graph: Component<{ data: GraphRow[] }> = (props) => {
   const [selectedLayout, setSelectedLayout] = createSignal<LayoutType>("force");
@@ -160,8 +160,8 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
 
     if (selectedLayout() === "force") {
       graph.setLayoutStrategy(new ForceGraphLayout());
-    } else if (selectedLayout() === "euler") {
-      graph.setLayoutStrategy(new EulerGraphLayout());
+    } else if (selectedLayout() === "radial") {
+      graph.setLayoutStrategy(new RadialLayout());
     } else if (selectedLayout() === "tree") {
       graph.setLayoutStrategy(new TreeLayout());
     }

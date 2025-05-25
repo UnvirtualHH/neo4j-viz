@@ -3,7 +3,7 @@ import { Data } from "../types/graphdata";
 import Edge, { EdgeProperties } from "./edge";
 import Node, { NodeId, NodeProperties } from "./node";
 import { LayoutStrategy } from "./layout/layoutstrategy";
-import { EulerGraphLayout } from "./layout/eulerlayout";
+import { ForceGraphLayout } from "./layout/forcelayout";
 
 class NetworkGraph extends Container {
   private nodes: Node[] = [];
@@ -11,7 +11,7 @@ class NetworkGraph extends Container {
   private nodeMap = new Map<NodeId, Node>();
 
   private animate = false;
-  private layoutStrategy: LayoutStrategy = new EulerGraphLayout();
+  private layoutStrategy: LayoutStrategy = new ForceGraphLayout();
 
   constructor() {
     super();
@@ -135,11 +135,11 @@ class NetworkGraph extends Container {
       if (allStable || frameCount > maxFrames) {
         this.animate = false;
       } else {
-        requestAnimationFrame(loop);
+        loop();
       }
     };
 
-    requestAnimationFrame(loop);
+    loop();
   }
 }
 

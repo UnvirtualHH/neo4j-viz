@@ -4,9 +4,12 @@ import Edge from "../edge";
 
 export class ForceGraphLayout implements LayoutStrategy {
   private gravityConstant = 0.05;
-  private repulsionConstant = 3000;
-  private springLength = 300;
+  private repulsionConstant = 2000;
+  private springLength = 200;
   private springStiffness = 0.1;
+  private damping = 0.85;
+  private minDistance = 50;
+  private clusteringForce = 0.01;
 
   apply(nodes: Node[], edges: Edge<any>[]) {
     nodes.forEach((node) => {
@@ -19,6 +22,8 @@ export class ForceGraphLayout implements LayoutStrategy {
         const dx = nodes[j].position.x - nodes[i].position.x;
         const dy = nodes[j].position.y - nodes[i].position.y;
         const distSq = dx * dx + dy * dy + 0.01;
+        const dist = Math.sqrt(distSq);
+
         const force = this.repulsionConstant / distSq;
         const fx = dx * force;
         const fy = dy * force;
@@ -27,6 +32,27 @@ export class ForceGraphLayout implements LayoutStrategy {
         nodes[i].vy -= fy;
         nodes[j].vx += fx;
         nodes[j].vy += fy;
+
+        if (dist < this.minDistance) {
+          const adjust = (this.minDistance - dist) / dist;
+          const fxAdjust = dx * adjust;
+          const fyAdjust = dy * adjust;
+
+          nodes[i].vx -= fxAdjust;
+          nodes[i].vy -= fyAdjust;
+          nodes[j].vx += fxAdjust;
+          nodes[j].vy += fyAdjust;
+        }
+
+        if (nodes[i].label !== undefined && nodes[i].label === nodes[j].label) {
+          const clusterFx = dx * this.clusteringForce;
+          const clusterFy = dy * this.clusteringForce;
+
+          nodes[i].vx += clusterFx;
+          nodes[i].vy += clusterFy;
+          nodes[j].vx -= clusterFx;
+          nodes[j].vy -= clusterFy;
+        }
       }
     }
 
@@ -46,6 +72,13 @@ export class ForceGraphLayout implements LayoutStrategy {
       n1.vy += fy;
       n2.vx -= fx;
       n2.vy -= fy;
+    });
+
+    nodes.forEach((node) => {
+      node.vx *= this.damping;
+      node.vy *= this.damping;
+      node.position.x += node.vx;
+      node.position.y += node.vy;
     });
   }
 }

@@ -11,50 +11,65 @@ export class TreeLayout implements LayoutStrategy {
     nodes.forEach((n) => nodeMap.set(n.id, n));
 
     const childrenMap = new Map<NodeId, Node[]>();
+    const parentSet = new Set<NodeId>();
+
     edges.forEach((e) => {
       const from = e.startNode.id;
       const to = e.endNode;
 
       if (!childrenMap.has(from)) childrenMap.set(from, []);
       childrenMap.get(from)!.push(to);
+      parentSet.add(to.id);
     });
 
-    const allTargets = new Set(edges.map((e) => e.endNode.id));
-    let roots = nodes.filter((n) => !allTargets.has(n.id));
-
+    let roots = nodes.filter((n) => !parentSet.has(n.id));
     if (roots.length === 0 && nodes.length > 0) {
-      roots = [nodes[0]];
+      roots = [nodes[0]]; 
     }
 
     const visited = new Set<NodeId>();
     let currentX = 0;
 
-    const placeSubtree = (node: Node, depth: number) => {
-      if (visited.has(node.id)) return;
+    const placeSubtree = (node: Node, depth: number): number => {
+      if (visited.has(node.id)) return node.position.x; 
       visited.add(node.id);
 
       const children = childrenMap.get(node.id) || [];
-      const childPositions: number[] = [];
+      const startX = currentX;
 
-      for (const child of children) {
-        placeSubtree(child, depth + 1);
-        childPositions.push(child.position.x);
+      if (children.length === 0) {
+        node.position.x = currentX;
+        node.position.y = depth * this.verticalSpacing;
+        currentX += this.horizontalSpacing;
+        return node.position.x;
       }
 
-      const avgX =
-        childPositions.length > 0
-          ? childPositions.reduce((a, b) => a + b, 0) / childPositions.length
-          : currentX;
+      const childXs: number[] = [];
+      for (const child of children) {
+        const childX = placeSubtree(child, depth + 1);
+        childXs.push(childX);
+      }
 
-      node.position.x = avgX;
+      const x = (Math.min(...childXs) + Math.max(...childXs)) / 2;
+      node.position.x = x;
       node.position.y = depth * this.verticalSpacing;
 
-      if (childPositions.length === 0) {
-        node.position.x = currentX;
-        currentX += this.horizontalSpacing;
-      }
+      return x;
     };
 
-    roots.forEach((root) => placeSubtree(root, 0));
+    for (const root of roots) {
+      const rootX = placeSubtree(root, 0);
+      currentX = Math.max(currentX, rootX + this.horizontalSpacing);
+    }
+
+    nodes.forEach((node) => {
+      if (
+        !node.label &&
+        (node as any).labels &&
+        (node as any).labels.length > 0
+      ) {
+        node.label = (node as any).labels[0];
+      }
+    });
   }
 }
