@@ -1,4 +1,4 @@
-import { Plus } from "lucide-solid";
+import { Minus, Plus } from "lucide-solid";
 import {
   For,
   Show,
@@ -72,11 +72,20 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
         <div class="flex justify-between items-center mb-1">
           <h2 class="text-sm font-semibold">Eigenschaften</h2>
           <button
-            title="Property hinzufügen"
-            class="text-green-600 hover:text-white p-1 rounded bg-white hover:bg-green-600"
+            title={
+              showAddProp()
+                ? "Property-Formular schließen"
+                : "Property hinzufügen"
+            }
+            class={`p-1 rounded transition 
+    ${
+      showAddProp()
+        ? "text-red-600 bg-white hover:bg-red-600 hover:text-white"
+        : "text-green-600 bg-white hover:bg-green-600 hover:text-white"
+    }`}
             onClick={() => setShowAddProp((v) => !v)}
           >
-            <Plus size={16} />
+            {showAddProp() ? <Minus size={16} /> : <Plus size={16} />}
           </button>
         </div>
         <Show when={showAddProp()}>
