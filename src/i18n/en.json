@@ -1,0 +1,8 @@
+{
+  "title": "neo4j Viz",
+  "cypher_editor": {
+    "title": "Cypher Editor",
+    "execute": "Execute Query",
+    "executing": "Executing..."
+  }
+}

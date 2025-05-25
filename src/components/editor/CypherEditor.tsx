@@ -25,10 +25,13 @@ import {
   isFavorite,
   removeQueryFromFavorites,
 } from "../../store/favorites";
+import { useAppContext } from "../../AppContext";
 
 const CypherEditor: Component<{
   onQueryResult: (result: CypherQueryResult) => void;
 }> = (props) => {
+  const { t } = useAppContext();
+
   let inputRef!: HTMLTextAreaElement;
   let highlightRef!: HTMLDivElement;
   let lineNumberRef!: HTMLDivElement;
@@ -216,7 +219,7 @@ const CypherEditor: Component<{
 
   return (
     <FloatingDialog
-      title="Cypher Editor"
+      title={t("cypher_editor.title")}
       initialPosition={autoDockPosition("top-right", { width: 600 })}
       initialSize={{ width: 600, height: 240 }}
       closable={false}
@@ -307,7 +310,9 @@ const CypherEditor: Component<{
           onClick={executeQuery}
           disabled={loading()}
         >
-          {loading() ? "Running..." : "Execute Query"}
+          {loading()
+            ? t("cypher_editor.executing")
+            : t("cypher_editor.execute")}
         </button>
 
         <div class="editor-status">
