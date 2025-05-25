@@ -3,6 +3,16 @@
   "cypher_editor": {
     "title": "Cypher Editor",
     "execute": "Query ausführen",
-    "executing": "Am Arbeiten..."
+    "executing": "Am Arbeiten...",
+    "showAllNodes": "Alle Knoten anzeigen",
+    "showAllNodesWithRelation": "Alle Verbindungen anzeigen",
+    "executionTime": "Ausführungszeit",
+    "nodes": "Knoten",
+    "relations": "Verbindungen",
+    "removeFromFavorites": "Aus Favoriten entfernen",
+    "addToFavorits": "Zu Favoriten hinzufügen"
+  },
+  "errors": {
+    "unkonwnError": "Unbekannter Fehler"
   }
 }

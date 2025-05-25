@@ -234,8 +234,8 @@ const CypherEditor: Component<{
           class="absolute top-1 left-1 z-10 text-sm"
           title={
             isCurrentFavorite()
-              ? "Aus Favoriten entfernen"
-              : "Zu Favoriten hinzufügen"
+              ? t("cypher_editor.removeFromFavorites")
+              : t("cypher_editor.addToFavorits")
           }
           onClick={() => {
             const query = currentQuery().trim();
@@ -262,7 +262,7 @@ const CypherEditor: Component<{
         <div class="quick-query-buttons absolute top-2 right-2 flex gap-2 z-10">
           <button
             class="icon-btn"
-            title="Alle Knoten anzeigen"
+            title={t("cypher_editor.showAllNodes")}
             onClick={() => insertQuickQuery("MATCH (n) RETURN n;")}
           >
             {" "}
@@ -270,7 +270,7 @@ const CypherEditor: Component<{
           </button>
           <button
             class="icon-btn"
-            title="Alle Verbindungen anzeigen"
+            title={t("cypher_editor.showAllNodesWithRelation")}
             onClick={() =>
               insertQuickQuery("MATCH (n)-[r]-(m) RETURN n, r, m;")
             }
@@ -317,7 +317,7 @@ const CypherEditor: Component<{
 
         <div class="editor-status">
           {queryTime() !== null && (
-            <div title="Ausführungszeit">
+            <div title={t("cypher_editor.executionTime")}>
               <div class="flex items-center gap-1">
                 <Timer size={12} strokeWidth={1.0} />
                 <span>{queryTime()!.toFixed(1)} ms</span>
@@ -325,18 +325,22 @@ const CypherEditor: Component<{
             </div>
           )}
           {nodeCount() !== null && (
-            <div title="Knoten">
+            <div title={t("cypher_editor.nodes")}>
               <div class="flex items-center gap-1">
                 <Circle size={12} strokeWidth={1.0} />
-                <span>{nodeCount()} Nodes</span>
+                <span>
+                  {nodeCount()} {t("cypher_editor.nodes")}
+                </span>
               </div>
             </div>
           )}
           {relCount() !== null && (
-            <div title="Beziehungen">
+            <div title={t("cypher_editor.relations")}>
               <div class="flex items-center gap-1">
                 <Workflow size={12} strokeWidth={1.0} />
-                <span>{relCount()} Relations</span>
+                <span>
+                  {relCount()} {t("cypher_editor.relations")}
+                </span>
               </div>
             </div>
           )}
