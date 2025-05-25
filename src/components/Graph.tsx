@@ -357,9 +357,9 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
             elementId={inspected.elementId}
             identity={inspected.identity}
             onClose={() => setInspectedProps(null)}
-            onUpdateAll={(newData) => {
+            onUpdateAll={(updates, toRemove) => {
               if (inspected.elementId) {
-                updateNodeProperties(inspected.elementId, newData);
+                updateNodeProperties(inspected.elementId, updates, toRemove);
               }
             }}
           />

@@ -1,4 +1,4 @@
-import { ClipboardCopy } from "lucide-solid";
+import { ClipboardCopy, Trash } from "lucide-solid";
 import { Component, createEffect, createSignal, Show } from "solid-js";
 import { inferNeo4jType, Neo4jValueType } from "../../types/neo4jvalues";
 import { neo4jTypeIcons } from "../layout/Neo4jTypeIcons";
@@ -8,6 +8,7 @@ type EditablePropProps = {
   value: any;
   onChange: (val: any) => void;
   onCopy: () => void;
+  onDelete?: () => void;
   readonly?: boolean;
 };
 
@@ -47,11 +48,21 @@ const EditableProp: Component<EditablePropProps> = (props) => {
 
   return (
     <li class="flex justify-between gap-2 border-b border-gray-200 pb-1 group items-center">
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1 group">
         <span title={type()}>
           {neo4jTypeIcons[type()]?.() ?? neo4jTypeIcons["any"]()}
         </span>
         <span class="font-mono">{props.keyName}</span>
+
+        <Show when={props.onDelete}>
+          <button
+            onClick={props.onDelete}
+            class="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
+            title="Property löschen"
+          >
+            <Trash size={14} stroke-width={2} />
+          </button>
+        </Show>
       </div>
 
       <div class="flex items-center gap-1">
@@ -124,11 +135,11 @@ const EditableProp: Component<EditablePropProps> = (props) => {
         </Show>
 
         <button
-          class="opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={props.onCopy}
+          class="text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
           title="Kopieren"
         >
-          <ClipboardCopy size={14} />
+          <ClipboardCopy size={14} stroke-width={2} />
         </button>
       </div>
     </li>

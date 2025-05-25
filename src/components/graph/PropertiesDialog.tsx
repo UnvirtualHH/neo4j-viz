@@ -21,19 +21,21 @@ type PropertiesDialogProps = {
   onClose: () => void;
   elementId?: string;
   identity?: Neo4jId;
-  onUpdateAll?: (newData: Record<string, any>) => void;
+  onUpdateAll?: (updates: Record<string, any>, toRemove: string[]) => void;
 };
 
 const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
   const [localData, setLocalData] = createSignal({ ...props.data });
+  const [deletedKeys, setDeletedKeys] = createSignal<Set<string>>(new Set());
   const [showConfirm, setShowConfirm] = createSignal(false);
-  let lastExternalData = props.data;
   const [showAddProp, setShowAddProp] = createSignal(false);
+  let lastExternalData = props.data;
 
   createEffect(() => {
     if (props.data !== lastExternalData) {
       lastExternalData = props.data;
       setLocalData({ ...props.data });
+      setDeletedKeys(new Set<string>());
     }
   });
 
@@ -77,22 +79,27 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
                 ? "Property-Formular schließen"
                 : "Property hinzufügen"
             }
-            class={`p-1 rounded transition 
-    ${
-      showAddProp()
-        ? "text-red-600 bg-white hover:bg-red-600 hover:text-white"
-        : "text-green-600 bg-white hover:bg-green-600 hover:text-white"
-    }`}
+            class={`p-1 rounded transition ${
+              showAddProp()
+                ? "text-red-600 bg-white hover:bg-red-600 hover:text-white"
+                : "text-green-600 bg-white hover:bg-green-600 hover:text-white"
+            }`}
             onClick={() => setShowAddProp((v) => !v)}
           >
             {showAddProp() ? <Minus size={16} /> : <Plus size={16} />}
           </button>
         </div>
+
         <Show when={showAddProp()}>
           <AddPropertyForm
             existingKeys={Object.keys(localData())}
             onAdd={(k, v) => {
               setLocalData((prev) => ({ ...prev, [k]: v }));
+              setDeletedKeys((prev) => {
+                const copy = new Set(prev);
+                copy.delete(k);
+                return copy;
+              });
               setShowAddProp(false);
             }}
           />
@@ -108,6 +115,7 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
               onCopy={() => navigator.clipboard.writeText(props.elementId!)}
             />
           </Show>
+
           <Show when={props.identity}>
             <EditableProp
               keyName="id"
@@ -141,12 +149,21 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
                       }`
                     )
                   }
+                  onDelete={() => {
+                    setDeletedKeys((prev) => new Set(prev).add(key));
+                    setLocalData((prev) => {
+                      const copy = { ...prev };
+                      delete copy[key];
+                      return copy;
+                    });
+                  }}
                 />
               )}
             </For>
           </Show>
         </ul>
       </div>
+
       <div class="fixed bottom-0 left-0 right-0 p-2 border-t border-t-white flex justify-between items-center">
         <button
           class="px-3 py-1 text-sm rounded bg-red-100 text-red-700 hover:bg-red-200"
@@ -158,13 +175,24 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
         <div class="flex gap-2">
           <button
             class="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200"
-            onClick={() => setLocalData({ ...props.data })}
+            onClick={() => {
+              setLocalData({ ...props.data });
+              setDeletedKeys(new Set<string>());
+            }}
           >
             Abbrechen
           </button>
+
           <button
             class="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
-            onClick={() => props.onUpdateAll?.(localData())}
+            onClick={() => {
+              const updates = { ...localData() };
+              const toRemove = Array.from(deletedKeys());
+
+              toRemove.forEach((k) => delete updates[k]);
+
+              props.onUpdateAll?.(updates, toRemove);
+            }}
           >
             Speichern
           </button>

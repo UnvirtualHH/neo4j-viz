@@ -188,13 +188,30 @@ export async function updateNodeProperty(
 
 export async function updateNodeProperties(
   elementId: string,
-  props: Record<string, any>
-): Promise<CypherQueryResult> {
-  const setClause = Object.keys(props)
-    .map((k) => `n.${k} = $${k}`)
-    .join(", ");
-  const query = `MATCH (n) WHERE elementId(n) = $elementId SET ${setClause}`;
-  return runCypherQuery(query, { elementId, ...props });
+  updates: Record<string, any>,
+  toRemove: string[] = []
+) {
+  const propsToSet: string[] = [];
+  const params: Record<string, any> = { elementId };
+
+  for (const key in updates) {
+    propsToSet.push(`n.${key} = $${key}`);
+    params[key] = updates[key];
+  }
+
+  const setClause = propsToSet.length ? `SET ${propsToSet.join(", ")}` : "";
+  const removeClause = toRemove.length
+    ? `REMOVE ${toRemove.map((k) => `n.${k}`).join(", ")}`
+    : "";
+
+  const query = `
+    MATCH (n)
+    WHERE elementId(n) = $elementId
+    ${setClause}
+    ${removeClause}
+  `.trim();
+
+  return runCypherQuery(query, params);
 }
 
 export async function deleteByElementId(
