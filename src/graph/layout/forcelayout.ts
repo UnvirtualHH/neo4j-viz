@@ -44,7 +44,7 @@ export class ForceGraphLayout implements LayoutStrategy {
           nodes[j].vy += fyAdjust;
         }
 
-        if (nodes[i].label !== undefined && nodes[i].label === nodes[j].label) {
+        if (nodes[i].id !== undefined && nodes[i].id === nodes[j].id) {
           const clusterFx = dx * this.clusteringForce;
           const clusterFy = dy * this.clusteringForce;
 

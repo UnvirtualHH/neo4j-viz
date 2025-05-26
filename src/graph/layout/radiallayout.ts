@@ -18,17 +18,7 @@ export class RadialLayout implements LayoutStrategy {
 
     root.position.x = 0;
     root.position.y = 0;
-
-    nodes.forEach((node) => {
-      if (
-        !node.label &&
-        (node as any).labels &&
-        (node as any).labels.length > 0
-      ) {
-        node.label = (node as any).labels[0];
-      }
-    });
-
+  
     const levels = new Map<Node, number>();
     const parents = new Map<Node, Node>();
     levels.set(root, 0);

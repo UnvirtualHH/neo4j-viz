@@ -24,14 +24,14 @@ export class TreeLayout implements LayoutStrategy {
 
     let roots = nodes.filter((n) => !parentSet.has(n.id));
     if (roots.length === 0 && nodes.length > 0) {
-      roots = [nodes[0]]; 
+      roots = [nodes[0]];
     }
 
     const visited = new Set<NodeId>();
     let currentX = 0;
 
     const placeSubtree = (node: Node, depth: number): number => {
-      if (visited.has(node.id)) return node.position.x; 
+      if (visited.has(node.id)) return node.position.x;
       visited.add(node.id);
 
       const children = childrenMap.get(node.id) || [];
@@ -61,15 +61,5 @@ export class TreeLayout implements LayoutStrategy {
       const rootX = placeSubtree(root, 0);
       currentX = Math.max(currentX, rootX + this.horizontalSpacing);
     }
-
-    nodes.forEach((node) => {
-      if (
-        !node.label &&
-        (node as any).labels &&
-        (node as any).labels.length > 0
-      ) {
-        node.label = (node as any).labels[0];
-      }
-    });
   }
 }
