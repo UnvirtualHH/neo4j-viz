@@ -1,7 +1,14 @@
 import { ClipboardCopy, Trash } from "lucide-solid";
-import { Component, createEffect, createSignal, Show } from "solid-js";
+import {
+  Component,
+  createEffect,
+  createSignal,
+  onCleanup,
+  Show,
+} from "solid-js";
 import { inferNeo4jType, Neo4jValueType } from "../../types/neo4jvalues";
 import { neo4jTypeIcons } from "../layout/Neo4jTypeIcons";
+import { useAppContext } from "../../AppContext";
 
 type EditablePropProps = {
   keyName: string;
@@ -17,9 +24,11 @@ function isDateString(value: any): boolean {
 }
 
 const EditableProp: Component<EditablePropProps> = (props) => {
+  const { t } = useAppContext();
+
   const [editing, setEditing] = createSignal(false);
   const [temp, setTemp] = createSignal(String(props.value));
-
+  const inputRef = { current: null as HTMLInputElement | null };
   createEffect(() => {
     if (!editing()) {
       setTemp(String(props.value));
@@ -40,6 +49,27 @@ const EditableProp: Component<EditablePropProps> = (props) => {
     setEditing(false);
   };
 
+  createEffect(() => {
+    if (editing() && inputRef.current) {
+      inputRef.current.focus();
+    }
+  });
+
+  createEffect(() => {
+    if (editing()) {
+      const handleClickOutside = (e: MouseEvent) => {
+        if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
+          handleBlur();
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      onCleanup(() =>
+        document.removeEventListener("mousedown", handleClickOutside)
+      );
+    }
+  });
+
   const type = (): Neo4jValueType => {
     if (props.keyName === "id" || props.keyName === "identity") return "id";
     if (props.keyName === "elementId") return "elementId";
@@ -58,7 +88,7 @@ const EditableProp: Component<EditablePropProps> = (props) => {
           <button
             onClick={props.onDelete}
             class="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
-            title="Property löschen"
+            title={t("properties_dialog.delete_property")}
           >
             <Trash size={14} stroke-width={2} />
           </button>
@@ -72,7 +102,11 @@ const EditableProp: Component<EditablePropProps> = (props) => {
             <span
               class="truncate text-right cursor-pointer"
               onClick={() => !props.readonly && setEditing(true)}
-              title={props.readonly ? "Nur lesen" : "Zum Bearbeiten klicken"}
+              title={
+                props.readonly
+                  ? t("properties_dialog.read_only")
+                  : t("properties_dialog.click_to_edit")
+              }
             >
               {typeof props.value === "string"
                 ? `"${props.value}"`
@@ -83,6 +117,7 @@ const EditableProp: Component<EditablePropProps> = (props) => {
           <Show when={typeof props.value === "boolean"}>
             <input
               type="checkbox"
+              ref={(el) => (inputRef.current = el)}
               checked={props.value}
               onChange={(e) => {
                 props.onChange(e.currentTarget.checked);
@@ -95,6 +130,7 @@ const EditableProp: Component<EditablePropProps> = (props) => {
           <Show when={typeof props.value === "number"}>
             <input
               type="number"
+              ref={(el) => (inputRef.current = el)}
               class="text-sm border px-1 py-0.5 rounded w-32 font-mono"
               value={temp()}
               onInput={(e) => setTemp(e.currentTarget.value)}
@@ -107,6 +143,7 @@ const EditableProp: Component<EditablePropProps> = (props) => {
           <Show when={isDateString(props.value)}>
             <input
               type="date"
+              ref={(el) => (inputRef.current = el)}
               class="text-sm border px-1 py-0.5 rounded w-40 font-mono"
               value={temp()}
               onInput={(e) => setTemp(e.currentTarget.value)}
@@ -124,6 +161,7 @@ const EditableProp: Component<EditablePropProps> = (props) => {
             }
           >
             <input
+              ref={(el) => (inputRef.current = el)}
               class="text-sm border px-1 py-0.5 rounded w-64 font-mono"
               value={temp()}
               onInput={(e) => setTemp(e.currentTarget.value)}
@@ -137,7 +175,7 @@ const EditableProp: Component<EditablePropProps> = (props) => {
         <button
           onClick={props.onCopy}
           class="text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
-          title="Kopieren"
+          title={t("properties_dialog.copy_property")}
         >
           <ClipboardCopy size={14} stroke-width={2} />
         </button>

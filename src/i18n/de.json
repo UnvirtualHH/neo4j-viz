@@ -14,5 +14,11 @@
   },
   "errors": {
     "unkonwnError": "Unbekannter Fehler"
+  },
+  "properties_dialog": {
+    "copy_property": "Kopieren",
+    "read_only": "Nur Lesen",
+    "click_to_edit": "Klicken zum Bearbeiten",
+    "delete_property": "Eigenschaft löschen"
   }
 }

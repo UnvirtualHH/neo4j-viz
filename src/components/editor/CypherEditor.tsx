@@ -231,7 +231,7 @@ const CypherEditor: Component<{
     >
       <div class="editor-container relative">
         <button
-          class="absolute top-1 left-1 z-10 text-sm"
+          class="absolute top-0 left-10 z-10 text-sm"
           title={
             isCurrentFavorite()
               ? t("cypher_editor.removeFromFavorites")
