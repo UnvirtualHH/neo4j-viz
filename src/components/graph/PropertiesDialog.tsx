@@ -24,6 +24,13 @@ type PropertiesDialogProps = {
   onUpdateAll?: (updates: Record<string, any>, toRemove: string[]) => void;
 };
 
+function unwrapNeo4jInt(val: any): any {
+  if (val && typeof val === "object" && "low" in val && "high" in val) {
+    return typeof val.toNumber === "function" ? val.toNumber() : val.low;
+  }
+  return val;
+}
+
 const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
   const [localData, setLocalData] = createSignal({ ...props.data });
   const [deletedKeys, setDeletedKeys] = createSignal<Set<string>>(new Set());
@@ -39,16 +46,8 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
     }
   });
 
-  const updateProp = (key: string, val: string) => {
-    const parsed =
-      val === "true"
-        ? true
-        : val === "false"
-        ? false
-        : !isNaN(Number(val))
-        ? Number(val)
-        : val;
-    setLocalData((prev) => ({ ...prev, [key]: parsed }));
+  const updateProp = (key: string, val: any) => {
+    setLocalData((prev) => ({ ...prev, [key]: val }));
   };
 
   const sortedKeys = () =>
@@ -58,6 +57,27 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
       const bIndex = order.includes(b) ? order.indexOf(b) : 99;
       return aIndex !== bIndex ? aIndex - bIndex : a.localeCompare(b);
     });
+
+  const hasChanges = () => {
+    const orig = props.data;
+    const curr = localData();
+
+    const keysOrig = Object.keys(orig);
+    const keysCurr = Object.keys(curr);
+
+    if (keysOrig.length !== keysCurr.length) return true;
+
+    for (const key of keysOrig) {
+      if (!(key in curr)) return true;
+
+      const v1 = unwrapNeo4jInt(orig[key]);
+      const v2 = unwrapNeo4jInt(curr[key]);
+
+      if (v1 !== v2) return true;
+    }
+
+    return deletedKeys().size > 0 || showAddProp();
+  };
 
   return (
     <FloatingDialog
@@ -135,30 +155,34 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
             }
           >
             <For each={sortedKeys()}>
-              {(key) => (
-                <EditableProp
-                  keyName={key}
-                  value={localData()[key]}
-                  onChange={(val) => updateProp(key, val)}
-                  onCopy={() =>
-                    navigator.clipboard.writeText(
-                      `${key}: ${
-                        typeof localData()[key] === "string"
-                          ? `"${localData()[key]}"`
-                          : localData()[key]
-                      }`
-                    )
-                  }
-                  onDelete={() => {
-                    setDeletedKeys((prev) => new Set(prev).add(key));
-                    setLocalData((prev) => {
-                      const copy = { ...prev };
-                      delete copy[key];
-                      return copy;
-                    });
-                  }}
-                />
-              )}
+              {(key) => {
+                const val = localData()[key];
+                const unwrapped = unwrapNeo4jInt(val);
+                return (
+                  <EditableProp
+                    keyName={key}
+                    value={val}
+                    onChange={(val) => updateProp(key, val)}
+                    onCopy={() =>
+                      navigator.clipboard.writeText(
+                        `${key}: ${
+                          typeof unwrapped === "string"
+                            ? `"${unwrapped}"`
+                            : unwrapped
+                        }`
+                      )
+                    }
+                    onDelete={() => {
+                      setDeletedKeys((prev) => new Set(prev).add(key));
+                      setLocalData((prev) => {
+                        const copy = { ...prev };
+                        delete copy[key];
+                        return copy;
+                      });
+                    }}
+                  />
+                );
+              }}
             </For>
           </Show>
         </ul>
@@ -172,31 +196,31 @@ const PropertiesDialog: Component<PropertiesDialogProps> = (props) => {
           Löschen
         </button>
 
-        <div class="flex gap-2">
-          <button
-            class="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200"
-            onClick={() => {
-              setLocalData({ ...props.data });
-              setDeletedKeys(new Set<string>());
-            }}
-          >
-            Abbrechen
-          </button>
+        <Show when={hasChanges()}>
+          <div class="flex gap-2">
+            <button
+              class="px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200"
+              onClick={() => {
+                setLocalData({ ...props.data });
+                setDeletedKeys(new Set<string>());
+              }}
+            >
+              Abbrechen
+            </button>
 
-          <button
-            class="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
-            onClick={() => {
-              const updates = { ...localData() };
-              const toRemove = Array.from(deletedKeys());
-
-              toRemove.forEach((k) => delete updates[k]);
-
-              props.onUpdateAll?.(updates, toRemove);
-            }}
-          >
-            Speichern
-          </button>
-        </div>
+            <button
+              class="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => {
+                const updates = { ...localData() };
+                const toRemove = Array.from(deletedKeys());
+                toRemove.forEach((k) => delete updates[k]);
+                props.onUpdateAll?.(updates, toRemove);
+              }}
+            >
+              Speichern
+            </button>
+          </div>
+        </Show>
       </div>
 
       <Show when={showConfirm()}>
