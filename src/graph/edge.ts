@@ -3,7 +3,7 @@ import { Data } from "../types/graphdata";
 import { getMidPoint, getOffsetPoint, getUnitVector } from "../utils/vector";
 import Node from "./node";
 
-type EdgeId = string | number;
+export type EdgeId = string | number;
 
 type EdgeProperties<T extends Data> = {
   id: EdgeId;

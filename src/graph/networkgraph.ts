@@ -1,6 +1,6 @@
 import { Container } from "pixi.js";
 import { Data } from "../types/graphdata";
-import Edge, { EdgeProperties } from "./edge";
+import Edge, { EdgeId, EdgeProperties } from "./edge";
 import Node, { NodeId, NodeProperties } from "./node";
 import { LayoutStrategy } from "./layout/layoutstrategy";
 import { ForceGraphLayout } from "./layout/forcelayout";
@@ -9,6 +9,7 @@ class NetworkGraph extends Container {
   private nodes: Node[] = [];
   private edges: Edge<Data>[] = [];
   private nodeMap = new Map<NodeId, Node>();
+  private edgeMap = new Map<EdgeId, Edge<Data>>();
 
   private animate = false;
   private layoutStrategy: LayoutStrategy = new ForceGraphLayout();
@@ -36,8 +37,16 @@ class NetworkGraph extends Container {
       endId: NodeId;
     }
   ) {
-    const startNode = this.getNodeById(properties.startId);
-    const endNode = this.getNodeById(properties.endId);
+    const { id, startId, endId } = properties;
+
+    if (this.edgeMap.has(id)) {
+      console.warn("Duplicate edge ignored:", id);
+      return;
+    }
+
+    const startNode = this.getNodeById(startId);
+    const endNode = this.getNodeById(endId);
+
     if (!startNode || !endNode) {
       throw new Error("Invalid node IDs for edge");
     }
@@ -49,6 +58,7 @@ class NetworkGraph extends Container {
     });
 
     this.edges.push(edge as unknown as Edge<Data>);
+    this.edgeMap.set(id, edge as unknown as Edge<Data>);
     this.addChild(edge);
   }
 
@@ -87,6 +97,7 @@ class NetworkGraph extends Container {
     this.nodes = [];
     this.edges = [];
     this.nodeMap.clear();
+    this.edgeMap.clear();
   }
 
   startSimulation() {

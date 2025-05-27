@@ -338,7 +338,6 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
           selected={selectedLayout()}
           onSelectLayout={(layout) => {
             setSelectedLayout(layout);
-            buildGraphFromData();
           }}
         />
         <ZoomControl
