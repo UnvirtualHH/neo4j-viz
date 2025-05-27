@@ -168,6 +168,50 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
 
     const nodeMap = new Map<string, Node>();
 
+    const nodeDataMap = new Map<string, GraphRow["sourceNode"]>(); 
+
+    for (const { sourceNode, targetNode } of props.data) {
+      if (sourceNode?.identity) {
+        const id = sourceNode.elementId ?? sourceNode.identity.low.toString();
+        nodeDataMap.set(id, sourceNode);
+      }
+      if (targetNode?.identity) {
+        const id = targetNode.elementId ?? targetNode.identity.low.toString();
+        nodeDataMap.set(id, targetNode);
+      }
+    }
+
+
+    for (const [id, nodeData] of nodeDataMap.entries()) {
+      if (!nodeMap.has(id) && nodeData) {
+        const label = nodeData.labels[0] ?? id;
+        const node = new Node({
+          id,
+          position: {
+            x: Math.random() * pixiApp.screen.width,
+            y: Math.random() * pixiApp.screen.height,
+          },
+          radius: 20,
+          color: stringToColor(label),
+          label,
+          labels: nodeData.labels,
+          properties: nodeData.properties,
+          onDragStart,
+          onClick: () => {
+            setInspectedProps({
+              data: nodeData.properties,
+              title: nodeData.labels?.join(", ") || "Node",
+              type: "node",
+              elementId: nodeData.elementId,
+              identity: nodeData.identity,
+            });
+          },
+        });
+        graph.addNode(node);
+        nodeMap.set(id, node);
+      }
+    }
+
     for (const { sourceNode, relation, targetNode } of props.data) {
       if (!sourceNode?.identity) continue;
       const sourceId =
