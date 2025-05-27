@@ -174,7 +174,7 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
         sourceNode.elementId ?? sourceNode.identity.low.toString();
 
       if (!nodeMap.has(sourceId)) {
-        const label = sourceNode.labels[0] ?? sourceId;
+        const label = sourceNode.labels?.[0] ?? sourceId;
         const node = new Node({
           id: sourceId,
           position: {
@@ -206,7 +206,7 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
           targetNode.elementId ?? targetNode.identity.low.toString();
 
         if (!nodeMap.has(targetId)) {
-          const label = targetNode.labels[0] ?? targetId;
+          const label = targetNode.labels?.[0] ?? sourceId;
           const node = new Node({
             id: targetId,
             position: {
