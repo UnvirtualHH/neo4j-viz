@@ -174,6 +174,7 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
         sourceNode.elementId ?? sourceNode.identity.low.toString();
 
       if (!nodeMap.has(sourceId)) {
+        const label = sourceNode.labels[0] ?? sourceId;
         const node = new Node({
           id: sourceId,
           position: {
@@ -181,7 +182,7 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
             y: Math.random() * pixiApp.screen.height,
           },
           radius: 20,
-          color: 0x3498db,
+          color: stringToColor(label),
           label: sourceNode.labels[0] ?? sourceId,
           labels: sourceNode.labels,
           properties: sourceNode.properties,
@@ -205,6 +206,7 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
           targetNode.elementId ?? targetNode.identity.low.toString();
 
         if (!nodeMap.has(targetId)) {
+          const label = targetNode.labels[0] ?? targetId;
           const node = new Node({
             id: targetId,
             position: {
@@ -212,7 +214,7 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
               y: Math.random() * pixiApp.screen.height,
             },
             radius: 20,
-            color: 0xe67e22,
+            color: stringToColor(label),
             label: targetNode.labels[0] ?? targetId,
             labels: targetNode.labels,
             properties: targetNode.properties,
@@ -279,6 +281,15 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
     window.removeEventListener("pointerup", onDragEnd);
     window.removeEventListener("pointercancel", onDragEnd);
   });
+
+  function stringToColor(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = (hash & 0x00ffffff).toString(16).toUpperCase();
+    return parseInt("0x" + color.padStart(6, "0"));
+  }
 
   const handleSearch = (term: string) => {
     if (!graph || !term.trim()) {
