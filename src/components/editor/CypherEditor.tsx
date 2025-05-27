@@ -272,7 +272,7 @@ const CypherEditor: Component<{
             class="icon-btn"
             title={t("cypher_editor.showAllNodesWithRelation")}
             onClick={() =>
-              insertQuickQuery("MATCH (n)-[r]-(m) RETURN n, r, m;")
+              insertQuickQuery("MATCH (n) OPTIONAL MATCH (n)-[r]-(m) RETURN DISTINCT n, r, m;")
             }
           >
             {" "}
