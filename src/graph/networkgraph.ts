@@ -40,7 +40,6 @@ class NetworkGraph extends Container {
     const { id, startId, endId } = properties;
 
     if (this.edgeMap.has(id)) {
-      console.warn("Duplicate edge ignored:", id);
       return;
     }
 
