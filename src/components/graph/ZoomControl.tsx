@@ -1,7 +1,6 @@
-import { ZoomIn, ZoomOut, ImageIcon, FileImageIcon } from "lucide-solid";
+import { ZoomIn, ZoomOut } from "lucide-solid";
 import { Accessor, Component } from "solid-js";
-import { useAppContext } from '../../AppContext';
-import { exportGraphAsPNG, exportGraphAsSVG } from '../../utils/exportUtils';
+import { useAppContext } from "../../AppContext";
 
 type ZoomControlProps = {
   zoomLevel: Accessor<number>;
@@ -10,16 +9,11 @@ type ZoomControlProps = {
   onZoomChange: (zoom: number) => void;
 };
 
-const ZoomControl: Component<ZoomControlProps & {
-  getPixiApp?: () => any;
-  getGraphContainer?: () => any;
-}> = ({
+const ZoomControl: Component<ZoomControlProps> = ({
   zoomLevel,
   minZoom,
   maxZoom,
   onZoomChange,
-  getPixiApp,
-  getGraphContainer,
 }) => {
   const { t } = useAppContext();
   const handleClick = (e: MouseEvent) => {
@@ -32,13 +26,11 @@ const ZoomControl: Component<ZoomControlProps & {
   };
 
   return (
-    <div class="absolute bottom-4 right-4 flex flex-col items-center gap-2 z-10 glass p-3 rounded-xl shadow-lg">
-
-      {/* Zoom Controls */}
+    <div class="glass p-3 rounded-xl shadow-lg flex flex-col items-center gap-2">
       <button
-        class="text-white text-2xl leading-none hover:scale-110 transition"
+        class="text-white text-2xl leading-none w-8 h-8 rounded-full flex items-center justify-center hover:scale-110 transition"
         onClick={() => onZoomChange(Math.min(zoomLevel() * 1.2, maxZoom))}
-        aria-label={t('zoom.in')}
+        aria-label={t("zoom.in")}
       >
         <ZoomIn class="text-white w-5 h-5" />
       </button>
@@ -57,9 +49,9 @@ const ZoomControl: Component<ZoomControlProps & {
       </div>
 
       <button
-        class="text-white text-2xl leading-none hover:scale-110 transition"
+        class="text-white text-2xl leading-none w-8 h-8 rounded-full flex items-center justify-center hover:scale-110 transition"
         onClick={() => onZoomChange(Math.max(zoomLevel() / 1.2, minZoom))}
-        aria-label="Zoom out"
+        aria-label={t("zoom.out")}
       >
         <ZoomOut class="text-white w-5 h-5" />
       </button>
