@@ -347,48 +347,50 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
     <>
       <Search onSearch={handleSearch} matchCount={matchCount()} />
       <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />
-      {/* Export Buttons Floating Above ZoomControl */}
+      {/* Export + Zoom Controls */}
       <Show when={viewportReady()}>
         {() => {
           const { t } = useAppContext();
           return (
-            <div class="absolute bottom-24 right-4 flex flex-row gap-2 z-20">
-              <button
-                class="text-white bg-black/40 rounded-full p-1 hover:bg-black/70 transition shadow-lg"
-                title={t('export.png')}
-                aria-label={t('export.png')}
-                onClick={() => {
-                  exportGraphAsPNG(pixiApp.renderer, pixiApp.stage, minimap.container);
-                }}
-              >
-                <ImageIcon class="w-5 h-5" />
-              </button>
-              <button
-                class="text-white bg-black/40 rounded-full p-1 hover:bg-black/70 transition shadow-lg"
-                title={t('export.svg')}
-                aria-label={t('export.svg')}
-                onClick={() => {
-                  exportGraphAsSVG(graph);
-                }}
-              >
-                <FileImageIcon class="w-5 h-5" />
-              </button>
+            <div class="absolute bottom-4 right-4 z-20 flex flex-col items-center" style={{ width: '56px' }}>
+              {/* Export Buttons */}
+              <div class="flex flex-row gap-2 mb-2">
+                <button
+                  class="text-white bg-black/40 rounded-full p-1 hover:bg-black/70 transition shadow-lg"
+                  title={t('export.png')}
+                  aria-label={t('export.png')}
+                  onClick={() => {
+                    exportGraphAsPNG(pixiApp.renderer, pixiApp.stage, minimap.container);
+                  }}
+                >
+                  <ImageIcon class="w-5 h-5" />
+                </button>
+                <button
+                  class="text-white bg-black/40 rounded-full p-1 hover:bg-black/70 transition shadow-lg"
+                  title={t('export.svg')}
+                  aria-label={t('export.svg')}
+                  onClick={() => {
+                    exportGraphAsSVG(graph);
+                  }}
+                >
+                  <FileImageIcon class="w-5 h-5" />
+                </button>
+              </div>
+              <ZoomControl
+                zoomLevel={zoomLevel}
+                minZoom={0.1}
+                maxZoom={10}
+                onZoomChange={(z) => setZoomTo(z)}
+              />
             </div>
           );
         }}
-        <LayoutSwitcher
-          selected={selectedLayout()}
-          onSelectLayout={(layout) => {
-            setSelectedLayout(layout);
-          }}
-        />
-        <ZoomControl
-          zoomLevel={zoomLevel}
-          minZoom={0.1}
-          maxZoom={10}
-          onZoomChange={(z) => setZoomTo(z)}
-        />
       </Show>
+      {/* LayoutSwitcher is outside the export/zoom controls */}
+      <LayoutSwitcher
+        selected={selectedLayout()}
+        onSelectLayout={setSelectedLayout}
+      />
       <Show when={inspectedProps()} keyed>
         {(inspected) => (
           <PropertiesDialog
