@@ -83,12 +83,17 @@ export function exportGraphAsSVG(graphContainer: any, filename = 'graph.svg') {
     const start = edge.startNode.position;
     const end = edge.endNode.position;
     svg += `<line x1="${start.x}" y1="${start.y}" x2="${end.x}" y2="${end.y}" stroke="#888" stroke-width="2" />\n`;
-    // Edge label (caption or label)
-    const label = edge.caption || edge.label;
-    if (label) {
+    // Edge label (caption/data or label)
+    let labelValue = '';
+    if (edge.caption && edge.data && edge.data[edge.caption] != null) {
+      labelValue = String(edge.data[edge.caption]);
+    } else if (edge.label) {
+      labelValue = edge.label;
+    }
+    if (labelValue) {
       const mx = (start.x + end.x) / 2;
       const my = (start.y + end.y) / 2;
-      svg += `<text x="${mx}" y="${my - 6}" font-family="Arial, sans-serif" font-size="12" fill="#444" text-anchor="middle" alignment-baseline="baseline" font-style="italic">${escapeXml(label)}</text>\n`;
+      svg += `<text x="${mx}" y="${my - 6}" font-family="Arial, sans-serif" font-size="12" fill="#444" text-anchor="middle" alignment-baseline="baseline" font-style="italic">${escapeXml(labelValue)}</text>\n`;
     }
   }
   svg += '</g>\n';
