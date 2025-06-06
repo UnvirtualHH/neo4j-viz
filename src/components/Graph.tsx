@@ -25,6 +25,9 @@ import LayoutSwitcher, { LayoutType } from "./graph/LayoutSwitcher";
 import createMinimap from "./graph/minimap";
 import PropertiesDialog from "./graph/PropertiesDialog";
 import ZoomControl from "./graph/ZoomControl";
+import { ImageIcon, FileImageIcon } from "lucide-solid";
+import { exportGraphAsPNG, exportGraphAsSVG } from "../utils/exportUtils";
+import { useAppContext } from "../AppContext";
 import Search from "./search/Search";
 import { RadialLayout } from "../graph/layout/radiallayout";
 
@@ -344,7 +347,35 @@ const Graph: Component<{ data: GraphRow[] }> = (props) => {
     <>
       <Search onSearch={handleSearch} matchCount={matchCount()} />
       <canvas class="w-dvw h-dvh bg-slate-200" ref={canvasRef} />
+      {/* Export Buttons Floating Above ZoomControl */}
       <Show when={viewportReady()}>
+        {() => {
+          const { t } = useAppContext();
+          return (
+            <div class="absolute bottom-24 right-4 flex flex-row gap-2 z-20">
+              <button
+                class="text-white bg-black/40 rounded-full p-1 hover:bg-black/70 transition shadow-lg"
+                title={t('export.png')}
+                aria-label={t('export.png')}
+                onClick={() => {
+                  exportGraphAsPNG(pixiApp.renderer, pixiApp.stage, minimap.container);
+                }}
+              >
+                <ImageIcon class="w-5 h-5" />
+              </button>
+              <button
+                class="text-white bg-black/40 rounded-full p-1 hover:bg-black/70 transition shadow-lg"
+                title={t('export.svg')}
+                aria-label={t('export.svg')}
+                onClick={() => {
+                  exportGraphAsSVG(graph);
+                }}
+              >
+                <FileImageIcon class="w-5 h-5" />
+              </button>
+            </div>
+          );
+        }}
         <LayoutSwitcher
           selected={selectedLayout()}
           onSelectLayout={(layout) => {

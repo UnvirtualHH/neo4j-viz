@@ -1,5 +1,7 @@
-import { ZoomIn, ZoomOut } from "lucide-solid";
+import { ZoomIn, ZoomOut, ImageIcon, FileImageIcon } from "lucide-solid";
 import { Accessor, Component } from "solid-js";
+import { useAppContext } from '../../AppContext';
+import { exportGraphAsPNG, exportGraphAsSVG } from '../../utils/exportUtils';
 
 type ZoomControlProps = {
   zoomLevel: Accessor<number>;
@@ -8,12 +10,18 @@ type ZoomControlProps = {
   onZoomChange: (zoom: number) => void;
 };
 
-const ZoomControl: Component<ZoomControlProps> = ({
+const ZoomControl: Component<ZoomControlProps & {
+  getPixiApp?: () => any;
+  getGraphContainer?: () => any;
+}> = ({
   zoomLevel,
   minZoom,
   maxZoom,
   onZoomChange,
+  getPixiApp,
+  getGraphContainer,
 }) => {
+  const { t } = useAppContext();
   const handleClick = (e: MouseEvent) => {
     const target = e.currentTarget as HTMLDivElement;
     const rect = target.getBoundingClientRect();
@@ -25,10 +33,12 @@ const ZoomControl: Component<ZoomControlProps> = ({
 
   return (
     <div class="absolute bottom-4 right-4 flex flex-col items-center gap-2 z-10 glass p-3 rounded-xl shadow-lg">
+
+      {/* Zoom Controls */}
       <button
         class="text-white text-2xl leading-none hover:scale-110 transition"
         onClick={() => onZoomChange(Math.min(zoomLevel() * 1.2, maxZoom))}
-        aria-label="Zoom in"
+        aria-label={t('zoom.in')}
       >
         <ZoomIn class="text-white w-5 h-5" />
       </button>

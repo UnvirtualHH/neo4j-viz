@@ -1,5 +1,13 @@
 {
   "title": "neo4j Viz",
+  "export": {
+    "png": "Export as PNG",
+    "svg": "Export as SVG"
+  },
+  "zoom": {
+    "in": "Zoom in",
+    "out": "Zoom out"
+  },
   "cypher_editor": {
     "title": "Cypher Editor",
     "execute": "Execute Query",
