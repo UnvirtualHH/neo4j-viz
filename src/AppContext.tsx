@@ -73,9 +73,7 @@ const AppContextProvider: ParentComponent = (props) => {
   };
 
   return (
-    <Suspense>
       <AppContext.Provider value={state}>{props.children}</AppContext.Provider>
-    </Suspense>
   );
 };
 
